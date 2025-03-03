@@ -1,0 +1,2 @@
+C:/Users/garda/AndroidStudioProjects/wps_stockopname/android/app/.cxx/Debug/392j3f4d/x86_64/CMakeFiles/edit_cache.dir
+C:/Users/garda/AndroidStudioProjects/wps_stockopname/android/app/.cxx/Debug/392j3f4d/x86_64/CMakeFiles/rebuild_cache.dir
