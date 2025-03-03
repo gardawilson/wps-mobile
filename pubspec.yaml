@@ -37,6 +37,8 @@ dependencies:
   mobile_scanner: ^6.0.5 # Gunakan versi terbaru
   permission_handler: ^11.1.0 # Gunakan versi terbaru
   shared_preferences: ^2.0.8
+  dropdown_search: ^3.0.1
+
 
 
 

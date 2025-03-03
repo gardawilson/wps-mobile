@@ -61,77 +61,96 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list, color: Colors.white),
-            onPressed: () => _showFilterOptions(context),
+            onPressed: () {
+              // Button is kept, but now it does nothing
+            },
           ),
         ],
       ),
-      body: Consumer<StockOpnameInputViewModel>(
-        builder: (context, viewModel, child) {
-          if (viewModel.isInitialLoading && viewModel.noLabelList.isEmpty) {
-            return const LoadingSkeleton();
-          }
+      body: Column(
+        children: [
+          // Filter options outside the button
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildFilterDropdown(),
+                _buildLocationDropdown(),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Consumer<StockOpnameInputViewModel>(
+              builder: (context, viewModel, child) {
+                if (viewModel.isInitialLoading && viewModel.noLabelList.isEmpty) {
+                  return const LoadingSkeleton();
+                }
 
-          if (viewModel.errorMessage.isNotEmpty) {
-            return Center(
-              child: Text(
-                viewModel.errorMessage,
-                style: const TextStyle(color: Colors.red, fontSize: 16),
-              ),
-            );
-          }
+                if (viewModel.errorMessage.isNotEmpty) {
+                  return Center(
+                    child: Text(
+                      viewModel.errorMessage,
+                      style: const TextStyle(color: Colors.red, fontSize: 16),
+                    ),
+                  );
+                }
 
-          if (!viewModel.noLabelFound) {
-            return const Center(
-              child: Text(
-                'Data Tidak Ditemukan',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-            );
-          }
+                if (!viewModel.noLabelFound) {
+                  return const Center(
+                    child: Text(
+                      'Data Tidak Ditemukan',
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                  );
+                }
 
-          return ListView.builder(
-            controller: _scrollController,
-            itemCount: viewModel.noLabelList.length + (viewModel.isLoading ? 1 : 0),
-            itemBuilder: (context, index) {
-              if (index == viewModel.noLabelList.length) {
-                return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16.0),
-                    child: CircularProgressIndicator(),
-                  ),
-                );
-              }
+                return ListView.builder(
+                  controller: _scrollController,
+                  itemCount: viewModel.noLabelList.length + (viewModel.isLoading ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == viewModel.noLabelList.length) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    }
 
-              final noLabel = viewModel.noLabelList[index];
+                    final noLabel = viewModel.noLabelList[index];
 
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      noLabel.combinedLabel,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            noLabel.combinedLabel,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            noLabel.labelType ?? 'Tidak Ada Tipe',
+                            style: const TextStyle(fontSize: 14, color: Colors.grey),
+                          ),
+                          Text(
+                            'Lokasi Label: ${noLabel.labelLocation ?? "Tidak Ada"}',
+                            style: const TextStyle(fontSize: 14, color: Colors.blueAccent),
+                          ),
+                          const Divider(),
+                        ],
                       ),
-                    ),
-                    Text(
-                      noLabel.labelType ?? 'Tidak Ada Tipe',
-                      style: const TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
-                    Text(
-                      'Lokasi Label: ${noLabel.labelLocation ?? "Tidak Ada"}',
-                      style: const TextStyle(fontSize: 14, color: Colors.blueAccent),
-                    ),
-                    const Divider(),
-                  ],
-                ),
-              );
-            },
-            cacheExtent: 1000,
-          );
-        },
+                    );
+                  },
+                  cacheExtent: 1000,
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: SpeedDial(
         animatedIcon: AnimatedIcons.menu_close,
@@ -160,97 +179,88 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
     );
   }
 
-  void _showFilterOptions(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) {
-        return DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.5,
-          maxChildSize: 0.9,
-          minChildSize: 0.3,
-          builder: (context, scrollController) {
-            return SingleChildScrollView(
-              controller: scrollController,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildFilterOption(context, 'Semua', null),
-                  _buildFilterOption(context, 'Sawn Timber', 'st'),
-                  _buildFilterOption(context, 'S4S', 's4s'),
-                  _buildFilterOption(context, 'Finger Joint', 'fj'),
-                  _buildFilterOption(context, 'Moulding', 'moulding'),
-                  _buildFilterOption(context, 'Laminating', 'laminating'),
-                  _buildFilterOption(context, 'CC Akhir', 'ccakhir'),
-                  _buildFilterOption(context, 'Sanding', 'sanding'),
-                  _buildFilterOption(context, 'Barang Jadi', 'bj'),
-                  _buildFilterOption(context, 'Kayu Bulat', 'kayubulat'),
-
-                  // Dropdown Filter Lokasi
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: DropdownButtonFormField<String>(
-                      decoration: InputDecoration(
-                        labelText: 'Filter Berdasarkan Lokasi',
-                        border: OutlineInputBorder(),
-                      ),
-                      value: _selectedLocation, // Default value is null
-                      items: [
-                        // Add 'Semua' option that represents null
-                        DropdownMenuItem<String>(
-                          value: null,
-                          child: Text('Semua'), // This is the 'null' option
-                        ),
-                        // Add the actual location items
-                        ...Provider.of<StockOpnameInputViewModel>(context, listen: false)
-                            .blokList
-                            .map((lokasi) => DropdownMenuItem<String>(
-                          value: lokasi.idLokasi,
-                          child: Text('${lokasi.idLokasi} - ${lokasi.blok}'),
-                        ))
-                            .toList(),
-                      ],
-                      onChanged: (selectedIdLokasi) {
-                        setState(() {
-                          _selectedLocation = selectedIdLokasi;
-                        });
-
-                        final viewModel =
-                        Provider.of<StockOpnameInputViewModel>(context, listen: false);
-                        // Pass null if 'Semua' is selected
-                        viewModel.fetchData(widget.noSO, filterBy: _selectedFilter, idLokasi: _selectedLocation);
-
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-
-  Widget _buildFilterOption(BuildContext context, String label, String? value) {
-    final isSelected = _selectedFilter == value;
-
-    return ListTile(
-      title: Text(label, style: TextStyle(color: isSelected ? Colors.blue : Colors.black)),
-      trailing: isSelected ? const Icon(Icons.check, color: Colors.blue) : null,
-      onTap: () {
+  Widget _buildFilterDropdown() {
+    return DropdownButton<String>(
+      value: _selectedFilter,
+      hint: const Text('Filter Label'),
+      onChanged: (value) {
         setState(() {
           _selectedFilter = value;
         });
 
         final viewModel = Provider.of<StockOpnameInputViewModel>(context, listen: false);
-        viewModel.fetchData(widget.noSO, filterBy: value, idLokasi: _selectedLocation);
-
-        Navigator.pop(context);
+        viewModel.fetchData(widget.noSO, filterBy: _selectedFilter, idLokasi: _selectedLocation);
       },
+      items: [
+        DropdownMenuItem<String>(
+          value: null,
+          child: Text('Semua'),
+        ),
+        DropdownMenuItem<String>(
+          value: 'st',
+          child: Text('Sawn Timber'),
+        ),
+        DropdownMenuItem<String>(
+          value: 's4s',
+          child: Text('S4S'),
+        ),
+        DropdownMenuItem<String>(
+          value: 'fj',
+          child: Text('Finger Joint'),
+        ),
+        DropdownMenuItem<String>(
+          value: 'moulding',
+          child: Text('Moulding'),
+        ),
+        DropdownMenuItem<String>(
+          value: 'laminating',
+          child: Text('Laminating'),
+        ),
+        DropdownMenuItem<String>(
+          value: 'ccakhir',
+          child: Text('CC Akhir'),
+        ),
+        DropdownMenuItem<String>(
+          value: 'sanding',
+          child: Text('Sanding'),
+        ),
+        DropdownMenuItem<String>(
+          value: 'bj',
+          child: Text('Barang Jadi'),
+        ),
+        DropdownMenuItem<String>(
+          value: 'kayubulat',
+          child: Text('Kayu Bulat'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLocationDropdown() {
+    return DropdownButton<String>(
+      value: _selectedLocation,
+      hint: const Text('Filter Lokasi'),
+      onChanged: (selectedIdLokasi) {
+        setState(() {
+          _selectedLocation = selectedIdLokasi;
+        });
+
+        final viewModel = Provider.of<StockOpnameInputViewModel>(context, listen: false);
+        viewModel.fetchData(widget.noSO, filterBy: _selectedFilter, idLokasi: _selectedLocation);
+      },
+      items: [
+        DropdownMenuItem<String>(
+          value: null,
+          child: Text('Semua'),
+        ),
+        ...Provider.of<StockOpnameInputViewModel>(context, listen: false)
+            .blokList
+            .map((lokasi) => DropdownMenuItem<String>(
+          value: lokasi.idLokasi,
+          child: Text('${lokasi.idLokasi} - ${lokasi.blok}'),
+        ))
+            .toList(),
+      ],
     );
   }
 
