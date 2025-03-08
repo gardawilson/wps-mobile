@@ -6,13 +6,16 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import '../view_models/stock_opname_input_view_model.dart';
 import 'package:flutter/foundation.dart';
+import '../widgets/not_found_dialog.dart'; // Import widget NotFoundDialog
+import 'package:vibration/vibration.dart';
+
+
 
 class BarcodeQrScanScreen extends StatefulWidget {
-  final String blok;
   final String idLokasi;
   final String noSO;
 
-  const BarcodeQrScanScreen({Key? key, required this.blok, required this.idLokasi, required this.noSO}) : super(key: key);
+  const BarcodeQrScanScreen({Key? key, required this.idLokasi, required this.noSO}) : super(key: key);
 
   @override
   _BarcodeQrScanScreenState createState() => _BarcodeQrScanScreenState();
@@ -78,27 +81,86 @@ class _BarcodeQrScanScreenState extends State<BarcodeQrScanScreen> with SingleTi
       final viewModel = Provider.of<StockOpnameInputViewModel>(context, listen: false);
       viewModel.processScannedCode(
         rawValue,
-        widget.blok,
         widget.idLokasi,
         widget.noSO,
-        onSaveComplete: (success, message) {
-          setState(() {
-            _isSaving = false;
-            _saveMessage = '$message\nLabel : $rawValue'; // Gabungkan pesan dan hasil scan
-          });
-          // Hapus pesan setelah beberapa detik
-          Future.delayed(const Duration(seconds: 3), () {
+        onSaveComplete: (success, statusCode, message) {
+
+          if (statusCode == 404 || statusCode == 409) {
+            // Menangani statusCode 404 atau 409 dengan dialog konfirmasi
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return NotFoundDialog(
+                  message: message, // Pesan error dari API
+                  onConfirm: () {
+                    // Lanjutkan pemrosesan jika user pilih "Ya"
+                    viewModel.processScannedCode(
+                      rawValue,
+                      widget.idLokasi,
+                      widget.noSO,
+                      onSaveComplete: (success, statusCode, message) {
+
+                        setState(() {
+                          _isSaving = false;
+                          _saveMessage = '$message\nLabel : $rawValue'; // Gabungkan pesan dan hasil scan
+                        });
+
+                        if (success) {
+                          final viewModel = Provider.of<StockOpnameInputViewModel>(context, listen: false);
+                          viewModel.fetchData(
+                              widget.noSO,
+                              idLokasi: widget.idLokasi
+                          );
+
+                          // Hapus pesan setelah beberapa detik
+                          Future.delayed(const Duration(seconds: 3), () {
+                            setState(() {
+                              _saveMessage = '';
+                            });
+                            _lastScannedCode = null; // Reset setelah pesan hilang
+                          });
+
+                        } else {
+                          // Hapus pesan setelah beberapa detik
+                          Future.delayed(const Duration(seconds: 3), () {
+                            setState(() {
+                              _saveMessage = '';
+                            });
+                            _lastScannedCode = null; // Reset setelah pesan hilang
+                          });
+                        }
+                      },
+                      forceSave: true, // Flag untuk memaksa penyimpanan meskipun data tidak ada
+                    );
+                  },
+                );
+              },
+            );
+          } else {
+            print("Masuk ke kondisi else, memulai getaran");
+
+            Vibration.vibrate(duration: 1000);
+
             setState(() {
-              _saveMessage = '';
+              _isSaving = false;
+              _saveMessage = '$message\nLabel : $rawValue'; // Gabungkan pesan dan hasil scan
             });
-            _lastScannedCode = null; // Reset setelah pesan hilang
-          });
+
+            // Hapus pesan setelah beberapa detik
+            Future.delayed(const Duration(seconds: 3), () {
+              setState(() {
+                _saveMessage = '';
+              });
+              _lastScannedCode = null; // Reset setelah pesan hilang
+            });
+          }
         },
       );
     } else {
       debugPrint('Duplicate scan detected, skipping.');
     }
   }
+
 
 
   @override
@@ -110,7 +172,7 @@ class _BarcodeQrScanScreenState extends State<BarcodeQrScanScreen> with SingleTi
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text('Lokasi ${widget.blok}, ${widget.idLokasi}',
+        title: Text('Lokasi ${widget.idLokasi}',
             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         elevation: 0,

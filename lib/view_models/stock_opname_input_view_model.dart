@@ -63,9 +63,16 @@ class StockOpnameInputViewModel extends ChangeNotifier {
           'http://192.168.11.153:5000/api/no-stock-opname/$selectedNoSO?page=1&pageSize=$initialPageSize&filterBy=${filterBy ?? 'all'}&idlokasi=${idLokasi ?? 'all'}'
       );
 
+      String? token = await _getToken();
+
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+
       print("🔍 URL Request: $uri"); // Log URL untuk memastikan parameter benar-benar dikirimkan
 
-      final response = await http.get(uri);
+      final response = await http.get(uri, headers: headers);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -114,7 +121,14 @@ class StockOpnameInputViewModel extends ChangeNotifier {
       final uri = Uri.parse(
           'http://192.168.11.153:5000/api/no-stock-opname/$selectedNoSO?page=$page&pageSize=$loadMoreSize&filterBy=${currentFilter ?? 'all'}&idLokasi=${currentLocation ?? 'all'}');
 
-      final response = await http.get(uri);
+      String? token = await _getToken();
+
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+
+      final response = await http.get(uri, headers: headers);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -154,10 +168,10 @@ class StockOpnameInputViewModel extends ChangeNotifier {
 
   Future<void> processScannedCode(
       String scannedCode,
-      String blok,
       String idLokasi,
       String noSO, {
-        Function(bool, String)? onSaveComplete
+        Function(bool, int, String)? onSaveComplete,
+        bool forceSave = false, // Flag untuk memaksa penyimpanan
       }) async {
     isSaving = true;
     saveMessage = 'Menyimpan...';
@@ -169,21 +183,20 @@ class StockOpnameInputViewModel extends ChangeNotifier {
 
       final headers = {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token', // Menambahkan token ke header Authorization
-      };      // Ambil token dari SharedPreferences
+        'Authorization': 'Bearer $token',
+      };
+
       if (token == null || token.isEmpty) {
         saveMessage = 'Token tidak ditemukan. Silakan login ulang.';
-        onSaveComplete?.call(false, saveMessage);
+        onSaveComplete?.call(false, 401, saveMessage); // Return status code 401
         isSaving = false;
         notifyListeners();
         return;
       }
 
-
-
       if (idLokasi.isEmpty) {
         saveMessage = 'IdLokasi tidak boleh kosong.';
-        onSaveComplete?.call(false, saveMessage);
+        onSaveComplete?.call(false, 400, saveMessage); // Return status code 400
         isSaving = false;
         notifyListeners();
         return;
@@ -192,26 +205,32 @@ class StockOpnameInputViewModel extends ChangeNotifier {
       final body = jsonEncode({
         'resultscanned': scannedCode,
         'idlokasi': idLokasi,
+        'forceSave': forceSave,  // Menggunakan flag forceSave
       });
 
       final response = await http.post(url, headers: headers, body: body);
 
       if (response.statusCode == 201) {
+        // Jika statusCode 201 atau jika forceSave true, simpan data meskipun tidak ada data
         saveMessage = 'Data berhasil disimpan!';
-        onSaveComplete?.call(true, saveMessage);
+        onSaveComplete?.call(true, response.statusCode, saveMessage); // Return status code 201
       } else {
         final responseJson = jsonDecode(response.body);
         saveMessage = responseJson['message'] ?? 'Gagal menyimpan';
-        onSaveComplete?.call(false, saveMessage);
+        onSaveComplete?.call(false, response.statusCode, saveMessage); // Return status code error
       }
     } catch (e) {
       saveMessage = 'Terjadi kesalahan: $e';
-      onSaveComplete?.call(false, saveMessage);
+      onSaveComplete?.call(false, 500, saveMessage); // Return status code 500 for error
     } finally {
       isSaving = false;
       notifyListeners();
     }
   }
+
+
+
+
 
   void clearScannedCodes() {
     scannedCodes.clear();

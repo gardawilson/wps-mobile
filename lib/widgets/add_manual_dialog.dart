@@ -1,11 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../view_models/stock_opname_input_view_model.dart';
+import 'not_found_dialog.dart'; // Import widget NotFoundDialog
+import 'print_confirmation_dialog.dart';
+
 
 class AddManualDialog extends StatefulWidget {
-  final String noSO; // Diterima dari halaman utama
+  final String noSO;
+  final String idLokasi;
+  final String selectedFilter; // Menambahkan parameter selectedFilter
 
-  const AddManualDialog({super.key, required this.noSO});
+  const AddManualDialog({
+    super.key,
+    required this.noSO,
+    required this.idLokasi,
+    required this.selectedFilter, // Pastikan parameter ini diterima
+  });
 
   @override
   State<AddManualDialog> createState() => _AddManualDialogState();
@@ -13,7 +23,7 @@ class AddManualDialog extends StatefulWidget {
 
 class _AddManualDialogState extends State<AddManualDialog> {
   final TextEditingController _labelController = TextEditingController();
-  bool isFormValid = false; // Untuk validasi tombol
+  bool isFormValid = false;
 
   @override
   void initState() {
@@ -43,50 +53,32 @@ class _AddManualDialogState extends State<AddManualDialog> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Dropdown Pilih Blok
-          DropdownButton<String>(
-            isExpanded: true,
-            hint: const Text('Pilih Blok'),
-            value: viewModel.blok.isEmpty ? null : viewModel.blok,
-            items: viewModel.blokList.map((blokData) => blokData.blok).toSet().map((blok) {
-              return DropdownMenuItem<String>(
-                value: blok,
-                child: Text(blok),
-              );
-            }).toList(),
-            onChanged: (value) {
-              if (value != null) {
-                viewModel.updateBlokAndLokasi(value);
-                setState(() {}); // Perbarui UI agar tombol aktif
-              }
-            },
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            child: Row(
+              children: [
+                const Text(
+                  'No SO: ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(widget.noSO),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            child: Row(
+              children: [
+                const Text(
+                  'Lokasi: ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(widget.idLokasi),
+              ],
+            ),
           ),
           const SizedBox(height: 16),
-
-          // Dropdown Pilih ID Lokasi
-          DropdownButton<String>(
-            isExpanded: true,
-            hint: const Text('Pilih ID Lokasi'),
-            value: viewModel.idLokasi.isEmpty ? null : viewModel.idLokasi,
-            items: viewModel.blokList
-                .where((blokData) => blokData.blok == viewModel.blok)
-                .map((blokData) {
-              return DropdownMenuItem<String>(
-                value: blokData.idLokasi,
-                child: Text(blokData.idLokasi),
-              );
-            }).toList(),
-            onChanged: (value) {
-              if (value != null) {
-                viewModel.idLokasi = value;
-                viewModel.notifyListeners();
-                setState(() {}); // Perbarui UI agar tombol aktif
-              }
-            },
-          ),
-          const SizedBox(height: 16),
-
-          // Input Text Manual
           TextField(
             controller: _labelController,
             decoration: const InputDecoration(
@@ -105,19 +97,85 @@ class _AddManualDialogState extends State<AddManualDialog> {
           child: const Text('Batal'),
         ),
         TextButton(
-          onPressed: viewModel.blok.isNotEmpty &&
-              viewModel.idLokasi.isNotEmpty &&
-              isFormValid
+          onPressed: isFormValid
               ? () {
             viewModel.processScannedCode(
               _labelController.text.trim().toUpperCase(),
-              viewModel.blok,
-              viewModel.idLokasi,
+              widget.idLokasi,
               widget.noSO,
-              onSaveComplete: (success, message) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(message)),
-                );
+              onSaveComplete: (success, statusCode, message) {
+                if (success) {
+                  final viewModel = Provider.of<StockOpnameInputViewModel>(context, listen: false);
+                  viewModel.fetchData(
+                      widget.noSO,
+                      filterBy: widget.selectedFilter,
+                      idLokasi: widget.idLokasi
+                  );
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(message)),
+                  );
+
+                  // // Menampilkan dialog konfirmasi print ulang label
+                  // showDialog(
+                  //   context: context,
+                  //   builder: (BuildContext context) {
+                  //     return PrintConfirmationDialog(
+                  //       onPrint: () {
+                  //         // Panggil fungsi untuk mencetak ulang label
+                  //       },
+                  //     );
+                  //   },
+                  // );
+
+                } else {
+                  if (statusCode == 404 || statusCode == 409) {
+                    // Menangani statusCode 404 dengan dialog konfirmasi
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return NotFoundDialog(
+                          message: message, // Pesan error dari API
+                          onConfirm: () {
+                            // Lanjutkan pemrosesan jika user pilih "Ya"
+                            viewModel.processScannedCode(
+                              _labelController.text.trim().toUpperCase(),
+                              widget.idLokasi,
+                              widget.noSO,
+                              onSaveComplete: (success, statusCode, message) {
+                                if (success) {
+
+                                  final viewModel = Provider.of<StockOpnameInputViewModel>(context, listen: false);
+                                  viewModel.fetchData(
+                                      widget.noSO,
+                                      filterBy: widget.selectedFilter,
+                                      idLokasi: widget.idLokasi
+                                  );
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(message)),
+                                  );
+
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(message)),
+                                  );
+                                }
+                              },
+                              forceSave: true, // Flag untuk memaksa penyimpanan meskipun data tidak ada
+                            );
+                          },
+                        );
+                      },
+                    );
+                  }
+                  else {
+                    // Menampilkan error dengan snackbar jika status code selain 404
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(message)),
+                    );
+                  }
+                }
               },
             );
             Navigator.of(context).pop();

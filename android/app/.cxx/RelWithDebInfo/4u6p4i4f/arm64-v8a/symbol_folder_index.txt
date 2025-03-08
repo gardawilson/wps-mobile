@@ -1,0 +1,1 @@
+C:\Users\garda\AndroidStudioProjects\wps_stockopname\build\app\intermediates\cxx\RelWithDebInfo\4u6p4i4f\obj\arm64-v8a

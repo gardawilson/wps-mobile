@@ -25,14 +25,14 @@ class DashboardScreen extends StatelessWidget {
             return _buildLoadingSkeleton();
           }
 
-          if (viewModel.errorMessage.isNotEmpty) {
+          if (viewModel.stockOpnameList.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     viewModel.errorMessage,
-                    style: const TextStyle(color: Colors.red, fontSize: 16),
+                    style: const TextStyle(color: Colors.grey, fontSize: 16),
                   ),
                   const SizedBox(height: 10),
                   ElevatedButton(
@@ -53,11 +53,30 @@ class DashboardScreen extends StatelessWidget {
             );
           }
 
-          if (viewModel.stockOpnameList.isEmpty) {
-            return const Center(
-              child: Text(
-                'No Data Available',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+          if (viewModel.errorMessage.isNotEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    viewModel.errorMessage,
+                    style: const TextStyle(color: Colors.grey, fontSize: 16),
+                  ),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: () {
+                      viewModel.fetchStockOpname();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF795548), // Warna coklat modern
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text('Retry'),
+                  ),
+                ],
               ),
             );
           }
@@ -96,7 +115,7 @@ class DashboardScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            stockOpname.noSO,
+                            stockOpname.tgl,
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -105,7 +124,7 @@ class DashboardScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 5),
                           Text(
-                            stockOpname.tgl,
+                            stockOpname.noSO,
                             style: const TextStyle(
                               fontSize: 14,
                               color: Colors.grey,

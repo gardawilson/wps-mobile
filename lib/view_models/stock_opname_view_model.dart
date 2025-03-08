@@ -45,17 +45,22 @@ class StockOpnameViewModel extends ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
+        // Parsing data jika status code OK (200)
         List<dynamic> data = json.decode(response.body);
         _stockOpnameList = data.map((item) => StockOpname.fromJson(item)).toList();
-        _errorMessage = '';
+        _errorMessage = '';  // Kosongkan pesan error jika sukses
       } else if (response.statusCode == 401) {
+        // Jika token tidak valid atau kadaluarsa
         _errorMessage = 'Unauthorized: Token is invalid or expired';
         _stockOpnameList = [];
       } else {
-        _errorMessage = 'Failed to load stock opname data';
+        // Jika status code bukan 200 atau 401, coba ambil pesan error dari API
+        final responseBody = json.decode(response.body);
+        _errorMessage = responseBody['message'] ?? 'Tidak ada Jadwal Stock Opname saat ini';
         _stockOpnameList = [];
       }
     } catch (error) {
+      // Menangani kesalahan koneksi
       _errorMessage = 'Failed to connect to the server';
       _stockOpnameList = [];
     } finally {

@@ -77,7 +77,6 @@ class ScanLocationDialog extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) => BarcodeQrScanScreen(
-                      blok: viewModel.blok,
                       idLokasi: viewModel.idLokasi,
                       noSO: noSO, // Kirim noSO
                     ),

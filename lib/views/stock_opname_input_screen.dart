@@ -5,6 +5,11 @@ import '../view_models/stock_opname_input_view_model.dart';
 import '../widgets/loading_skeleton.dart';
 import '../widgets/scan_location_dialog.dart';
 import '../widgets/add_manual_dialog.dart';
+import '../views/barcode_qr_scan_screen.dart';
+import 'package:searchfield/searchfield.dart';
+import 'package:flutter_searchable_dropdown/flutter_searchable_dropdown.dart';  // Import package
+
+
 
 class StockOpnameInputScreen extends StatefulWidget {
   final String noSO;
@@ -17,6 +22,7 @@ class StockOpnameInputScreen extends StatefulWidget {
 }
 
 class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
+  final TextEditingController _locationController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   String? _selectedFilter;
   String? _selectedLocation;
@@ -25,26 +31,32 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final viewModel = Provider.of<StockOpnameInputViewModel>(context, listen: false);
-      viewModel.fetchInitialData(widget.noSO);
+    final viewModel = Provider.of<StockOpnameInputViewModel>(context, listen: false);
 
-      _scrollController.addListener(() {
-        if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 100) {
-          if (!isLoadingMore) {
-            isLoadingMore = true;
-            viewModel.loadMoreData(widget.noSO).then((_) {
-              isLoadingMore = false;
-            });
-          }
-        }
+    // Memanggil fetchData() untuk memuat data lokasi
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      viewModel.fetchData(widget.noSO).then((_) {
+        setState(() {});
       });
+    });
+
+    // Menambahkan listener untuk infinite scroll
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 100) {
+        if (!isLoadingMore) {
+          isLoadingMore = true;
+          viewModel.loadMoreData(widget.noSO).then((_) {
+            isLoadingMore = false;
+          });
+        }
+      }
     });
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _locationController.dispose();
     super.dispose();
   }
 
@@ -61,22 +73,22 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list, color: Colors.white),
-            onPressed: () {
-              // Button is kept, but now it does nothing
-            },
+            onPressed: () {},
           ),
         ],
       ),
       body: Column(
         children: [
-          // Filter options outside the button
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 _buildFilterDropdown(),
-                _buildLocationDropdown(),
+                SizedBox(width: 16),
+                _buildLocationDropdown(),  // Menggunakan SearchableDropdown
+                SizedBox(width: 16),
+                _buildCountText(),  // Menampilkan count di sebelah kanan
               ],
             ),
           ),
@@ -164,7 +176,7 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
             child: const Icon(Icons.qr_code),
             label: 'Scan QR',
             onTap: () {
-              _showScanLocationSelectionDialog(context);
+              _showScanBarQRCode(context);
             },
           ),
           SpeedDialChild(
@@ -180,104 +192,136 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
   }
 
   Widget _buildFilterDropdown() {
-    return DropdownButton<String>(
-      value: _selectedFilter,
-      hint: const Text('Filter Label'),
-      onChanged: (value) {
-        setState(() {
-          _selectedFilter = value;
-        });
+    return Container(
+      width: 120, // Tentukan lebar dropdown
+      padding: EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: DropdownButton<String>(
+        value: _selectedFilter,
+        hint: const Text('Filter Label'),
+        isExpanded: true,  // Agar dropdown mengisi ruang lebar yang tersedia
+        onChanged: (value) {
+          setState(() {
+            _selectedFilter = value;
+          });
 
-        final viewModel = Provider.of<StockOpnameInputViewModel>(context, listen: false);
-        viewModel.fetchData(widget.noSO, filterBy: _selectedFilter, idLokasi: _selectedLocation);
-      },
-      items: [
-        DropdownMenuItem<String>(
-          value: null,
-          child: Text('Semua'),
-        ),
-        DropdownMenuItem<String>(
-          value: 'st',
-          child: Text('Sawn Timber'),
-        ),
-        DropdownMenuItem<String>(
-          value: 's4s',
-          child: Text('S4S'),
-        ),
-        DropdownMenuItem<String>(
-          value: 'fj',
-          child: Text('Finger Joint'),
-        ),
-        DropdownMenuItem<String>(
-          value: 'moulding',
-          child: Text('Moulding'),
-        ),
-        DropdownMenuItem<String>(
-          value: 'laminating',
-          child: Text('Laminating'),
-        ),
-        DropdownMenuItem<String>(
-          value: 'ccakhir',
-          child: Text('CC Akhir'),
-        ),
-        DropdownMenuItem<String>(
-          value: 'sanding',
-          child: Text('Sanding'),
-        ),
-        DropdownMenuItem<String>(
-          value: 'bj',
-          child: Text('Barang Jadi'),
-        ),
-        DropdownMenuItem<String>(
-          value: 'kayubulat',
-          child: Text('Kayu Bulat'),
-        ),
-      ],
+          final viewModel = Provider.of<StockOpnameInputViewModel>(context, listen: false);
+          viewModel.fetchData(widget.noSO, filterBy: _selectedFilter, idLokasi: _selectedLocation);
+        },
+        items: [
+          DropdownMenuItem<String>(value: null, child: Text('Semua')),
+          DropdownMenuItem<String>(value: 'st', child: Text('ST')),
+          DropdownMenuItem<String>(value: 's4s', child: Text('S4S')),
+          DropdownMenuItem<String>(value: 'fj', child: Text('FJ')),
+          DropdownMenuItem<String>(value: 'moulding', child: Text('MLD')),
+          DropdownMenuItem<String>(value: 'laminating', child: Text('LMT')),
+          DropdownMenuItem<String>(value: 'ccakhir', child: Text('CCA')),
+          DropdownMenuItem<String>(value: 'sanding', child: Text('SND')),
+          DropdownMenuItem<String>(value: 'bj', child: Text('BJ')),
+          // DropdownMenuItem<String>(value: 'kayubulat', child: Text('KB')),
+        ],
+        underline: SizedBox.shrink(), // Menghilangkan garis bawah yang default
+      ),
     );
   }
+
 
   Widget _buildLocationDropdown() {
-    return DropdownButton<String>(
-      value: _selectedLocation,
-      hint: const Text('Filter Lokasi'),
-      onChanged: (selectedIdLokasi) {
-        setState(() {
-          _selectedLocation = selectedIdLokasi;
-        });
-
-        final viewModel = Provider.of<StockOpnameInputViewModel>(context, listen: false);
-        viewModel.fetchData(widget.noSO, filterBy: _selectedFilter, idLokasi: _selectedLocation);
-      },
-      items: [
-        DropdownMenuItem<String>(
-          value: null,
-          child: Text('Semua'),
+    return Container(
+      width: 120, // Tentukan lebar tetap untuk dropdown
+      padding: EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: SearchField(
+        controller: _locationController,  // Menghubungkan controller dengan SearchField
+        hint: 'Lokasi',
+        searchInputDecoration: SearchInputDecoration(
+          border: InputBorder.none,
         ),
-        ...Provider.of<StockOpnameInputViewModel>(context, listen: false)
-            .blokList
-            .map((lokasi) => DropdownMenuItem<String>(
-          value: lokasi.idLokasi,
-          child: Text('${lokasi.idLokasi} - ${lokasi.blok}'),
-        ))
-            .toList(),
-      ],
+        suggestions: [
+          // Menambahkan "Semua" sebagai item pertama
+          SearchFieldListItem('Semua'),
+          // Menambahkan lokasi-lokasi lainnya setelah "Semua"
+          ...Provider.of<StockOpnameInputViewModel>(context, listen: false)
+              .blokList
+              .map((lokasi) => SearchFieldListItem(lokasi.idLokasi))
+              .toList(),
+        ],
+        onSuggestionTap: (selectedLocation) {
+          setState(() {
+            _selectedLocation = selectedLocation.searchKey;  // Menyimpan ID Lokasi
+            _locationController.text = selectedLocation.searchKey;  // Menampilkan nama lokasi di input
+          });
+
+          final viewModel = Provider.of<StockOpnameInputViewModel>(context, listen: false);
+          if (_selectedLocation == 'Semua') {
+            viewModel.fetchData(widget.noSO, filterBy: _selectedFilter, idLokasi: null);
+          } else {
+            viewModel.fetchData(widget.noSO, filterBy: _selectedFilter, idLokasi: _selectedLocation);
+          }
+        },
+      ),
     );
   }
 
-  void _showScanLocationSelectionDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return ScanLocationDialog(noSO: widget.noSO);
-      },
+  Widget _buildCountText() {
+    // Asumsi count didapatkan dari jumlah item yang ada di blokList
+    final count = Provider.of<StockOpnameInputViewModel>(context).totalData;
+
+    return Text(
+      '$count Label', // Menampilkan jumlah item
+      style: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+        color: Colors.black,
+      ),
+    );
+  }
+
+
+
+  void _showScanBarQRCode(BuildContext context) {
+    if (_selectedLocation == null || _selectedLocation == 'Semua') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Harap pilih lokasi terlebih dahulu.')),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BarcodeQrScanScreen(
+          idLokasi: _selectedLocation!,
+          noSO: widget.noSO,
+        ),
+      ),
     );
   }
 
   void _showAddManualDialog(BuildContext context) {
+    if (_selectedLocation == null || _selectedLocation == 'Semua') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Harap pilih lokasi terlebih dahulu.')),
+      );
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AddManualDialog(noSO: widget.noSO);
+        return AddManualDialog(
+          noSO: widget.noSO,
+          selectedFilter: _selectedFilter ?? 'all',
+          idLokasi: _selectedLocation!,
+        );
       },
     );
   }
