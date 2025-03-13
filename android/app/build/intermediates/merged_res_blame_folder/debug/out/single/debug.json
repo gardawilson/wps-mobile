@@ -1,0 +1,50 @@
+[
+    {
+        "merged": "com.example.wps_stockopname.app-merged_res-44:/drawable-mdpi_ic_launcher_foreground.png.flat",
+        "source": "com.example.wps_stockopname.app-main-46:/drawable-mdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.example.wps_stockopname.app-merged_res-44:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.example.wps_stockopname.app-main-46:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.example.wps_stockopname.app-merged_res-44:/drawable-hdpi_ic_launcher_foreground.png.flat",
+        "source": "com.example.wps_stockopname.app-main-46:/drawable-hdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.example.wps_stockopname.app-merged_res-44:/drawable-xhdpi_ic_launcher_foreground.png.flat",
+        "source": "com.example.wps_stockopname.app-main-46:/drawable-xhdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.example.wps_stockopname.app-merged_res-44:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "com.example.wps_stockopname.app-main-46:/mipmap-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.wps_stockopname.app-merged_res-44:/drawable-v21_launch_background.xml.flat",
+        "source": "com.example.wps_stockopname.app-main-46:/drawable-v21/launch_background.xml"
+    },
+    {
+        "merged": "com.example.wps_stockopname.app-merged_res-44:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "com.example.wps_stockopname.app-main-46:/mipmap-xxxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.wps_stockopname.app-merged_res-44:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "com.example.wps_stockopname.app-main-46:/mipmap-mdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.wps_stockopname.app-merged_res-44:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "com.example.wps_stockopname.app-main-46:/mipmap-xhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.wps_stockopname.app-merged_res-44:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "com.example.wps_stockopname.app-main-46:/mipmap-xxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.wps_stockopname.app-merged_res-44:/drawable-xxxhdpi_ic_launcher_foreground.png.flat",
+        "source": "com.example.wps_stockopname.app-main-46:/drawable-xxxhdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.example.wps_stockopname.app-merged_res-44:/drawable-xxhdpi_ic_launcher_foreground.png.flat",
+        "source": "com.example.wps_stockopname.app-main-46:/drawable-xxhdpi/ic_launcher_foreground.png"
+    }
+]

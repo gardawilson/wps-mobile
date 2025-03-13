@@ -116,17 +116,16 @@ class _AddManualDialogState extends State<AddManualDialog> {
                     SnackBar(content: Text(message)),
                   );
 
-                  // // Menampilkan dialog konfirmasi print ulang label
-                  // showDialog(
-                  //   context: context,
-                  //   builder: (BuildContext context) {
-                  //     return PrintConfirmationDialog(
-                  //       onPrint: () {
-                  //         // Panggil fungsi untuk mencetak ulang label
-                  //       },
-                  //     );
-                  //   },
-                  // );
+                  // Menampilkan dialog konfirmasi print ulang label
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return PrintConfirmationDialog(
+                        nolabel: 'R.008709',  // Ganti dengan nolabel yang sesuai
+                      );
+                    },
+                  );
+
 
                 } else {
                   if (statusCode == 404 || statusCode == 409) {

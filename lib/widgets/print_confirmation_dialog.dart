@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; // Untuk menghubungkan ViewModel
+import '../view_models/preview_label_view_model.dart'; // Pastikan ini adalah PreviewLabelViewModel yang benar
+import '../views/preview_label_screen.dart'; // Pastikan halaman preview yang benar
 
-// Widget untuk konfirmasi pencetakan ulang label
 class PrintConfirmationDialog extends StatelessWidget {
-  final VoidCallback onPrint;
+  final String nolabel; // Menambahkan nolabel sebagai parameter
 
-  const PrintConfirmationDialog({super.key, required this.onPrint});
+  const PrintConfirmationDialog({super.key, required this.nolabel});
 
   @override
   Widget build(BuildContext context) {
@@ -19,9 +21,35 @@ class PrintConfirmationDialog extends StatelessWidget {
           child: const Text('Tidak'),
         ),
         TextButton(
-          onPressed: () {
-            Navigator.of(context).pop(); // Tutup dialog setelah memilih Ya
-            onPrint(); // Jalankan fungsi print yang diberikan
+          onPressed: () async {
+            final previewLabelViewModel =
+            Provider.of<PreviewLabelViewModel>(context, listen: false);
+
+            await previewLabelViewModel.fetchLabelData(nolabel);
+
+            print("Label data: ${previewLabelViewModel.label}");
+
+            if (previewLabelViewModel.label != null) {
+              Navigator.of(context).pop();
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LabelPreviewPage(nolabel: nolabel),
+                ),
+              );
+            } else {
+              Navigator.of(context).pop();
+
+              // Membungkus ScaffoldMessenger di dalam Builder untuk memastikan konteks yang benar
+              Builder(
+                builder: (context) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Gagal mengambil data label untuk $nolabel')),
+                  );
+                  return const SizedBox.shrink(); // Return empty widget
+                },
+              );
+            }
           },
           child: const Text('Ya'),
         ),
