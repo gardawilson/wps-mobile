@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart'; // Untuk menghubungkan ViewModel
 import '../view_models/preview_label_view_model.dart'; // Pastikan ini adalah PreviewLabelViewModel yang benar
 import '../views/preview_label_screen.dart'; // Pastikan halaman preview yang benar
+import '../view_models/pdf_view_model.dart';
+import '../view_models/pdf_view_model_st.dart';
 
 class PrintConfirmationDialog extends StatelessWidget {
   final String nolabel; // Menambahkan nolabel sebagai parameter
@@ -11,8 +13,8 @@ class PrintConfirmationDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Konfirmasi Pencetakan Ulang'),
-      content: const Text('Apakah Anda ingin melakukan print ulang label?'),
+      title: const Text('Label Telah 6 Bulan'),
+      content: Text('Label berhasil disimpan. Apakah Anda ingin melakukan print ulang label $nolabel?'),
       actions: [
         TextButton(
           onPressed: () {
@@ -22,8 +24,7 @@ class PrintConfirmationDialog extends StatelessWidget {
         ),
         TextButton(
           onPressed: () async {
-            final previewLabelViewModel =
-            Provider.of<PreviewLabelViewModel>(context, listen: false);
+            final previewLabelViewModel = Provider.of<PreviewLabelViewModel>(context, listen: false);
 
             await previewLabelViewModel.fetchLabelData(nolabel);
 
@@ -31,12 +32,17 @@ class PrintConfirmationDialog extends StatelessWidget {
 
             if (previewLabelViewModel.label != null) {
               Navigator.of(context).pop();
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => LabelPreviewPage(nolabel: nolabel),
-                ),
-              );
+
+              // Cek huruf pertama dari nolabel untuk menentukan tindakan selanjutnya
+              if (nolabel.startsWith('E')) {
+                // Jika nolabel dimulai dengan 'E', jalankan PDFViewModelS4S
+                final pdfViewModel = Provider.of<PDFViewModelST>(context, listen: false);
+                pdfViewModel.createAndPrintPDF(context, nolabel);
+              } else if (nolabel.startsWith('R')) {
+                // Jika nolabel dimulai dengan 'R', jalankan PDFViewModelST
+                final pdfViewModel = Provider.of<PDFViewModelS4S>(context, listen: false);
+                pdfViewModel.createAndPrintPDF(context, nolabel);
+              }
             } else {
               Navigator.of(context).pop();
 

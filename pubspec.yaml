@@ -45,6 +45,7 @@ dependencies:
   printing: ^5.5.0
   path_provider: ^2.0.11
   qr_flutter: ^4.0.0
+  audioplayers: ^6.4.0  # Versi terbaru yang dapat menangani versi http lebih baru
 
 
 
@@ -77,6 +78,10 @@ flutter:
   assets:
     - assets/icon/
     - assets/fonts/Helvetica.ttf
+    - assets/images/check.png
+    - assets/images/cross.png
+    - assets/sounds/accepted.mp3
+    - assets/sounds/denied.mp3
 
   # To add assets to your application, add an assets section, like this:
   # assets:

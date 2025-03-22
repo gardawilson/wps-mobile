@@ -210,7 +210,7 @@ class StockOpnameInputViewModel extends ChangeNotifier {
 
       final response = await http.post(url, headers: headers, body: body);
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 201 || response.statusCode == 200) {
         // Jika statusCode 201 atau jika forceSave true, simpan data meskipun tidak ada data
         saveMessage = 'Data berhasil disimpan!';
         onSaveComplete?.call(true, response.statusCode, saveMessage); // Return status code 201

@@ -104,75 +104,82 @@ class _AddManualDialogState extends State<AddManualDialog> {
               widget.idLokasi,
               widget.noSO,
               onSaveComplete: (success, statusCode, message) {
-                if (success) {
-                  final viewModel = Provider.of<StockOpnameInputViewModel>(context, listen: false);
-                  viewModel.fetchData(
-                      widget.noSO,
-                      filterBy: widget.selectedFilter,
-                      idLokasi: widget.idLokasi
-                  );
+                if (mounted) { // Memeriksa apakah widget masih dalam tree
+                  if (success) {
+                    final viewModel = Provider.of<StockOpnameInputViewModel>(
+                        context, listen: false);
+                    viewModel.fetchData(
+                        widget.noSO,
+                        filterBy: widget.selectedFilter,
+                        idLokasi: widget.idLokasi
+                    );
 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(message)),
-                  );
-
-                  // Menampilkan dialog konfirmasi print ulang label
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return PrintConfirmationDialog(
-                        nolabel: 'R.008709',  // Ganti dengan nolabel yang sesuai
+                    if (statusCode == 200) {
+                      // Menampilkan dialog konfirmasi print ulang label
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          String nolabel = _labelController.text.trim()
+                              .toUpperCase();
+                          return PrintConfirmationDialog(
+                            nolabel: nolabel,
+                          );
+                        },
                       );
-                    },
-                  );
+                    } else{
+                      // Menampilkan SnackBar setelah data berhasil diproses
+                      // ScaffoldMessenger.of(context).showSnackBar(
+                      //   SnackBar(content: Text(message)),
+                      // );
+                    }
 
+                  } else {
+                    if (statusCode == 404 || statusCode == 409) {
+                      // Menangani statusCode 404 dengan dialog konfirmasi
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return NotFoundDialog(
+                            message: message,
+                            onConfirm: () {
+                              // Lanjutkan pemrosesan jika user pilih "Ya"
+                              viewModel.processScannedCode(
+                                _labelController.text.trim().toUpperCase(),
+                                widget.idLokasi,
+                                widget.noSO,
+                                onSaveComplete: (success, statusCode, message) {
+                                  if (mounted) {
+                                    if (success) {
+                                      viewModel.fetchData(
+                                          widget.noSO,
+                                          filterBy: widget.selectedFilter,
+                                          idLokasi: widget.idLokasi
+                                      );
 
-                } else {
-                  if (statusCode == 404 || statusCode == 409) {
-                    // Menangani statusCode 404 dengan dialog konfirmasi
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return NotFoundDialog(
-                          message: message, // Pesan error dari API
-                          onConfirm: () {
-                            // Lanjutkan pemrosesan jika user pilih "Ya"
-                            viewModel.processScannedCode(
-                              _labelController.text.trim().toUpperCase(),
-                              widget.idLokasi,
-                              widget.noSO,
-                              onSaveComplete: (success, statusCode, message) {
-                                if (success) {
-
-                                  final viewModel = Provider.of<StockOpnameInputViewModel>(context, listen: false);
-                                  viewModel.fetchData(
-                                      widget.noSO,
-                                      filterBy: widget.selectedFilter,
-                                      idLokasi: widget.idLokasi
-                                  );
-
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(message)),
-                                  );
-
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(message)),
-                                  );
-                                }
-                              },
-                              forceSave: true, // Flag untuk memaksa penyimpanan meskipun data tidak ada
-                            );
-                          },
-                        );
-                      },
-                    );
-                  }
-                  else {
-                    // Menampilkan error dengan snackbar jika status code selain 404
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(message)),
-                    );
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(content: Text(message)),
+                                      );
+                                    } else {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(content: Text(message)),
+                                      );
+                                    }
+                                  }
+                                },
+                                forceSave: true,
+                              );
+                            },
+                          );
+                        },
+                      );
+                    } else {
+                      // Menampilkan error dengan snackbar jika status code selain 404
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(message)),
+                      );
+                    }
                   }
                 }
               },

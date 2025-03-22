@@ -8,14 +8,18 @@ import '../view_models/stock_opname_input_view_model.dart';
 import 'package:flutter/foundation.dart';
 import '../widgets/not_found_dialog.dart'; // Import widget NotFoundDialog
 import 'package:vibration/vibration.dart';
+import 'package:audioplayers/audioplayers.dart';
+
 
 
 
 class BarcodeQrScanScreen extends StatefulWidget {
-  final String idLokasi;
   final String noSO;
+  final String selectedFilter;
+  final String idLokasi;
 
-  const BarcodeQrScanScreen({Key? key, required this.idLokasi, required this.noSO}) : super(key: key);
+
+  const BarcodeQrScanScreen({Key? key, required this.noSO, required this.selectedFilter, required this.idLokasi}) : super(key: key);
 
   @override
   _BarcodeQrScanScreenState createState() => _BarcodeQrScanScreenState();
@@ -28,6 +32,8 @@ class _BarcodeQrScanScreenState extends State<BarcodeQrScanScreen> with SingleTi
   bool hasCameraPermission = false;
   late AnimationController _animationController;
   bool _isDetected = false;
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
 
   bool _isSaving = false; // State untuk loading
   String _saveMessage = ''; // State untuk pesan
@@ -40,11 +46,15 @@ class _BarcodeQrScanScreenState extends State<BarcodeQrScanScreen> with SingleTi
     super.initState();
     _getCameraPermission();
 
+
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 200),
       vsync: this,
     )..repeat(reverse: true);
   }
+
+
 
   Future<void> _getCameraPermission() async {
     final status = await Permission.camera.request();
@@ -75,7 +85,7 @@ class _BarcodeQrScanScreenState extends State<BarcodeQrScanScreen> with SingleTi
     super.dispose();
   }
 
-  void _processScanResult(String rawValue) {
+  void _processScanResult(String rawValue) async  {
     if (rawValue != _lastScannedCode) { // Hanya proses jika kode berbeda
       _lastScannedCode = rawValue; // Update kode terakhir
       final viewModel = Provider.of<StockOpnameInputViewModel>(context, listen: false);
@@ -109,6 +119,7 @@ class _BarcodeQrScanScreenState extends State<BarcodeQrScanScreen> with SingleTi
                           final viewModel = Provider.of<StockOpnameInputViewModel>(context, listen: false);
                           viewModel.fetchData(
                               widget.noSO,
+                              filterBy: widget.selectedFilter,
                               idLokasi: widget.idLokasi
                           );
 
@@ -139,7 +150,25 @@ class _BarcodeQrScanScreenState extends State<BarcodeQrScanScreen> with SingleTi
           } else {
             print("Masuk ke kondisi else, memulai getaran");
 
-            Vibration.vibrate(duration: 1000);
+            if (statusCode == 201 || statusCode == 200) {
+              // Memutar suara accepted.mp3 dengan kecepatan 2x
+              _audioPlayer.setPlaybackRate(2.0); // Kecepatan 2x
+              _audioPlayer.play(AssetSource('sounds/accepted.mp3'));
+            } else {
+              // Memutar suara denied.mp3 dengan kecepatan 2x
+              _audioPlayer.setPlaybackRate(2.0); // Kecepatan 2x
+              _audioPlayer.play(AssetSource('sounds/denied.mp3'));
+              Vibration.vibrate(duration: 1000);
+
+            }
+
+            final viewModel = Provider.of<StockOpnameInputViewModel>(
+                context, listen: false);
+            viewModel.fetchData(
+                widget.noSO,
+                filterBy: widget.selectedFilter,
+                idLokasi: widget.idLokasi
+            );
 
             setState(() {
               _isSaving = false;
@@ -162,33 +191,41 @@ class _BarcodeQrScanScreenState extends State<BarcodeQrScanScreen> with SingleTi
   }
 
 
-
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final scanAreaSize = screenWidth * 0.6;
+    final count = Provider.of<StockOpnameInputViewModel>(context).totalData;
+
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: Text('Lokasi ${widget.idLokasi}',
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
-          IconButton(
-            icon: Icon(isFlashOn ? Icons.flash_off : Icons.flash_on, color: Colors.white),
-            onPressed: () {
-              setState(() {
-                isFlashOn = !isFlashOn;
-              });
-              cameraController.toggleTorch();
-            },
+        appBar: AppBar(
+          title: Text(
+            'Lokasi ${widget.idLokasi} | ${count} Label',
+            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
           ),
-        ],
-      ),
+          backgroundColor: Colors.white, // Set background color to white
+          elevation: 0,
+          iconTheme: const IconThemeData(color: Colors.black), // Set icon color to black
+          actions: [
+            IconButton(
+              icon: Icon(
+                isFlashOn ? Icons.flash_off : Icons.flash_on,
+                color: Colors.black, // Set the icon color to black
+              ),
+              onPressed: () async {
+                setState(() {
+                  isFlashOn = !isFlashOn;
+                });
+
+                // Toggle torch (flashlight)
+                cameraController.toggleTorch();
+              },
+            ),
+          ],
+        ),
       body: Stack(
         children: [
           if (hasCameraPermission)
@@ -278,6 +315,34 @@ class _BarcodeQrScanScreenState extends State<BarcodeQrScanScreen> with SingleTi
                   : const SizedBox.shrink(),
             ),
           ),
+
+          // Ikon Status (check.png atau cross.png)
+          if (_saveMessage.isNotEmpty) // Hanya tampilkan ikon jika ada pesan
+            Positioned(
+              top: 150, // Atur jarak dari bawah (sesuaikan dengan kebutuhan)
+              left: 0,
+              right: 0,
+              child: Center(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: _saveMessage.startsWith('Data berhasil')
+                      ? Image.asset(
+                    'assets/images/check.png', // Path ke check.png
+                    key: const ValueKey('check'),
+                    width: 120, // Sesuaikan ukuran ikon
+                    height: 120,
+                  )
+                      : Image.asset(
+                    'assets/images/cross.png', // Path ke cross.png
+                    key: const ValueKey('cross'),
+                    width: 80, // Sesuaikan ukuran ikon
+                    height: 80,
+                  ),
+                ),
+              ),
+            ),
+
+          // Box Decoration (tidak diubah)
           Align(
             alignment: Alignment.center,
             child: AnimatedContainer(

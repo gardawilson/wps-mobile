@@ -2,10 +2,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/label_model.dart';
+import '../models/label_model_st.dart';
+import '../models/label_model_s4s.dart';
 
 class PreviewLabelViewModel extends ChangeNotifier {
-  LabelModel? label;   // Menyimpan data label yang didapatkan dari API
+  dynamic label;   // Menyimpan data label yang didapatkan dari API (LabelModelST atau LabelModelS4S)
   bool isLoading = false;   // Menandakan status loading data
   String? errorMessage;    // Menyimpan pesan error jika terjadi kesalahan
 
@@ -49,9 +50,12 @@ class PreviewLabelViewModel extends ChangeNotifier {
 
         // Memeriksa apakah header ada dan tidak kosong
         if (data['header'] != null && data['header'].isNotEmpty) {
-          // Mengambil data pertama dari 'header' dan memetakannya ke model
-          label = LabelModel.fromJson(data);
-          // Menampilkan hasil label untuk verifikasi
+          // Menentukan format model yang digunakan
+          if (nolabel.startsWith('E')) {
+            label = LabelModelST.fromJson(data);  // Format 'ST'
+          } else if (nolabel.startsWith('R')) {
+            label = LabelModelS4S.fromJson(data);  // Format 'S4S'
+          }
           print("Label Data: ${label?.toString()}");
         } else {
           label = null;

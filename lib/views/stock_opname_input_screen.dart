@@ -299,8 +299,9 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => BarcodeQrScanScreen(
-          idLokasi: _selectedLocation!,
           noSO: widget.noSO,
+          selectedFilter: _selectedFilter ?? 'all',
+          idLokasi: _selectedLocation!,
         ),
       ),
     );
