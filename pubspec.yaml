@@ -80,6 +80,7 @@ flutter:
     - assets/fonts/Helvetica.ttf
     - assets/images/check.png
     - assets/images/cross.png
+    - assets/images/icon_without_bg.png
     - assets/sounds/accepted.mp3
     - assets/sounds/denied.mp3
 

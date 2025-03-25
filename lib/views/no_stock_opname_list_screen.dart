@@ -4,7 +4,7 @@ import 'package:shimmer/shimmer.dart';
 import '../view_models/stock_opname_view_model.dart';
 import 'stock_opname_input_screen.dart';
 
-class DashboardScreen extends StatelessWidget {
+class StockOpnameListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {

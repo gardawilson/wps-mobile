@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'views/login_screen.dart';
-import 'views/dashboard_screen.dart'; // Import DashboardScreen
+import 'views/no_stock_opname_list_screen.dart'; // Import DashboardScreen
+import 'views/home_screen.dart';  // Pastikan path sesuai dengan file Anda
 import 'view_models/stock_opname_view_model.dart'; // Import StockOpnameViewModel
 import 'view_models/stock_opname_input_view_model.dart'; // Import StockOpnameInputViewModel
 import 'view_models/preview_label_view_model.dart'; // Import LabelViewModel
 import 'view_models/pdf_view_model.dart'; // Import PDFViewModel yang diperlukan
 import 'view_models/pdf_view_model_st.dart'; // Import PDFViewModel yang diperlukan
+import 'view_models/user_profile_view_model.dart'; // Import UserProfileViewModel
+
 
 void main() {
   runApp(MyApp());
@@ -22,16 +25,19 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => PreviewLabelViewModel()), // Menambahkan LabelViewModel
         ChangeNotifierProvider(create: (_) => PDFViewModelS4S()), // Menambahkan PDFViewModel yang diperlukan
         ChangeNotifierProvider(create: (_) => PDFViewModelST()), // Menambahkan PDFViewModel yang diperlukan
+        ChangeNotifierProvider(create: (_) => UserProfileViewModel()), // Menambahkan UserProfileViewModel
+
       ],
       child: MaterialApp(
-        title: 'Stock Opname App',
+        title: 'WPS Mobile',
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
         initialRoute: '/',
         routes: {
           '/': (context) => LoginScreen(),
-          '/home': (context) => DashboardScreen(),
+          '/home': (context) => HomeScreen(),
+          '/dashboard': (context) => StockOpnameListScreen(),
         },
       ),
     );
