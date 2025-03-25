@@ -17,7 +17,7 @@ class StockOpnameListScreen extends StatelessWidget {
         title: const Text(
           'Stock Opname List',
           style: TextStyle(color: Colors.white),
-        ),        backgroundColor: const Color(0xFF795548), // Warna coklat modern
+        ),        backgroundColor: const Color(0xFF755330),
       ),
       body: Consumer<StockOpnameViewModel>(
         builder: (context, viewModel, child) {
@@ -40,7 +40,7 @@ class StockOpnameListScreen extends StatelessWidget {
                       viewModel.fetchStockOpname();
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF795548), // Warna coklat modern
+                      backgroundColor: const Color(0xFF755330),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -68,7 +68,7 @@ class StockOpnameListScreen extends StatelessWidget {
                       viewModel.fetchStockOpname();
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF795548), // Warna coklat modern
+                      backgroundColor: const Color(0xFF755330),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -119,7 +119,7 @@ class StockOpnameListScreen extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Colors.brown,
+                              color: Color(0xFF755330),
                             ),
                           ),
                           const SizedBox(height: 5),

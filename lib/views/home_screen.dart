@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../view_models/user_profile_view_model.dart';
 import '../widgets/user_profile_dialog.dart'; // Impor UserProfileDialog
+import 'mapping_lokasi_screen.dart'; // Impor UserProfileDialog
 
 
 
@@ -68,8 +69,11 @@ class HomeScreen extends StatelessWidget {
                 title: 'Mapping Lokasi',
                 icon: Icons.location_on_outlined,
                 onTap: () {
-                  Navigator.pushNamed(context, '/notifications');
-                },
+                  // Navigasi ke MappingLokasiScreen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => MappingLokasiScreen()),
+                  );                },
               ),
               const SizedBox(height: 16),
               _buildMenuCard(

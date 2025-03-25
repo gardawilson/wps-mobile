@@ -1,27 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-import '../view_models/stock_opname_input_view_model.dart';
+import '../view_models/mapping_lokasi_view_model.dart';
 import '../widgets/loading_skeleton.dart';
 import '../widgets/scan_location_dialog.dart';
 import '../widgets/add_manual_dialog.dart';
-import '../views/barcode_qr_scan_screen.dart';
+import '../views/barcode_qr_scan_mapping_screen.dart';
 import 'package:searchfield/searchfield.dart';
 import 'package:flutter_searchable_dropdown/flutter_searchable_dropdown.dart';  // Import package
 
 
 
-class StockOpnameInputScreen extends StatefulWidget {
-  final String noSO;
-  final String tgl;
-
-  const StockOpnameInputScreen({Key? key, required this.noSO, required this.tgl}) : super(key: key);
+class MappingLokasiScreen extends StatefulWidget {
+  const MappingLokasiScreen({Key? key}) : super(key: key);
 
   @override
-  _StockOpnameInputScreenState createState() => _StockOpnameInputScreenState();
+  _MappingLokasiScreenState createState() => _MappingLokasiScreenState();
 }
 
-class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
+
+class _MappingLokasiScreenState extends State<MappingLokasiScreen> {
   final TextEditingController _locationController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   String? _selectedFilter;
@@ -31,11 +29,11 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
   @override
   void initState() {
     super.initState();
-    final viewModel = Provider.of<StockOpnameInputViewModel>(context, listen: false);
+    final viewModel = Provider.of<MappingLokasiViewModel>(context, listen: false);
 
     // Memanggil fetchData() untuk memuat data lokasi
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      viewModel.fetchData(widget.noSO).then((_) {
+      viewModel.fetchData().then((_) {
         setState(() {});
       });
     });
@@ -45,7 +43,7 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
       if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 100) {
         if (!isLoadingMore) {
           isLoadingMore = true;
-          viewModel.loadMoreData(widget.noSO).then((_) {
+          viewModel.loadMoreData().then((_) {
             isLoadingMore = false;
           });
         }
@@ -65,11 +63,11 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.noSO,
+          'Mapping Lokasi',
           style: const TextStyle(color: Colors.white),
         ),
         automaticallyImplyLeading: false,
-        backgroundColor: const Color(0xFF755330),
+        backgroundColor: const Color(0xFF755330), // Coklat elegan
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list, color: Colors.white),
@@ -93,7 +91,7 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
             ),
           ),
           Expanded(
-            child: Consumer<StockOpnameInputViewModel>(
+            child: Consumer<MappingLokasiViewModel>(
               builder: (context, viewModel, child) {
                 if (viewModel.isInitialLoading && viewModel.noLabelList.isEmpty) {
                   return const LoadingSkeleton();
@@ -166,7 +164,7 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
       ),
       floatingActionButton: SpeedDial(
         animatedIcon: AnimatedIcons.menu_close,
-        backgroundColor: const Color(0xFF755330),
+        backgroundColor: const Color(0xFF755330), // Coklat elegan
         foregroundColor: Colors.white,
         visible: true,
         curve: Curves.linear,
@@ -209,8 +207,8 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
             _selectedFilter = value;
           });
 
-          final viewModel = Provider.of<StockOpnameInputViewModel>(context, listen: false);
-          viewModel.fetchData(widget.noSO, filterBy: _selectedFilter, idLokasi: _selectedLocation);
+          final viewModel = Provider.of<MappingLokasiViewModel>(context, listen: false);
+          viewModel.fetchData(filterBy: _selectedFilter, idLokasi: _selectedLocation);
         },
         items: [
           DropdownMenuItem<String>(value: null, child: Text('Semua')),
@@ -249,7 +247,7 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
           // Menambahkan "Semua" sebagai item pertama
           SearchFieldListItem('Semua'),
           // Menambahkan lokasi-lokasi lainnya setelah "Semua"
-          ...Provider.of<StockOpnameInputViewModel>(context, listen: false)
+          ...Provider.of<MappingLokasiViewModel>(context, listen: false)
               .blokList
               .map((lokasi) => SearchFieldListItem(lokasi.idLokasi))
               .toList(),
@@ -260,11 +258,11 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
             _locationController.text = selectedLocation.searchKey;  // Menampilkan nama lokasi di input
           });
 
-          final viewModel = Provider.of<StockOpnameInputViewModel>(context, listen: false);
+          final viewModel = Provider.of<MappingLokasiViewModel>(context, listen: false);
           if (_selectedLocation == 'Semua') {
-            viewModel.fetchData(widget.noSO, filterBy: _selectedFilter, idLokasi: null);
+            viewModel.fetchData(filterBy: _selectedFilter, idLokasi: null);
           } else {
-            viewModel.fetchData(widget.noSO, filterBy: _selectedFilter, idLokasi: _selectedLocation);
+            viewModel.fetchData(filterBy: _selectedFilter, idLokasi: _selectedLocation);
           }
         },
       ),
@@ -273,7 +271,7 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
 
   Widget _buildCountText() {
     // Asumsi count didapatkan dari jumlah item yang ada di blokList
-    final count = Provider.of<StockOpnameInputViewModel>(context).totalData;
+    final count = Provider.of<MappingLokasiViewModel>(context).totalData;
 
     return Text(
       '$count Label', // Menampilkan jumlah item
@@ -297,8 +295,7 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => BarcodeQrScanScreen(
-          noSO: widget.noSO,
+        builder: (context) => BarcodeQrScanMappingScreen(
           selectedFilter: _selectedFilter ?? 'all',
           idLokasi: _selectedLocation!,
         ),
@@ -314,15 +311,15 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
       return;
     }
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AddManualDialog(
-          noSO: widget.noSO,
-          selectedFilter: _selectedFilter ?? 'all',
-          idLokasi: _selectedLocation!,
-        );
-      },
-    );
+    // showDialog(
+    //   context: context,
+    //   builder: (BuildContext context) {
+    //     return AddManualDialog(
+    //       noSO: widget.noSO,
+    //       selectedFilter: _selectedFilter ?? 'all',
+    //       idLokasi: _selectedLocation!,
+    //     );
+    //   },
+    // );
   }
 }

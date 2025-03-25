@@ -9,6 +9,7 @@ import 'view_models/preview_label_view_model.dart'; // Import LabelViewModel
 import 'view_models/pdf_view_model.dart'; // Import PDFViewModel yang diperlukan
 import 'view_models/pdf_view_model_st.dart'; // Import PDFViewModel yang diperlukan
 import 'view_models/user_profile_view_model.dart'; // Import UserProfileViewModel
+import 'view_models/mapping_lokasi_view_model.dart'; // Import UserProfileViewModel
 
 
 void main() {
@@ -26,6 +27,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => PDFViewModelS4S()), // Menambahkan PDFViewModel yang diperlukan
         ChangeNotifierProvider(create: (_) => PDFViewModelST()), // Menambahkan PDFViewModel yang diperlukan
         ChangeNotifierProvider(create: (_) => UserProfileViewModel()), // Menambahkan UserProfileViewModel
+        ChangeNotifierProvider(create: (_) => MappingLokasiViewModel()), // Menambahkan UserProfileViewModel
 
       ],
       child: MaterialApp(
