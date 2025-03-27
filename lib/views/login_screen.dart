@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import '../view_models/login_view_model.dart';
 import '../models/user_model.dart';
+import '../view_models/update_view_model.dart';
+import '../models/update_model.dart';
+import 'package:open_file/open_file.dart';
+import 'package:permission_handler/permission_handler.dart';
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -13,7 +18,119 @@ class _LoginScreenState extends State<LoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final LoginViewModel _viewModel = LoginViewModel();
+  final UpdateViewModel _updateViewModel = UpdateViewModel();
   bool _isPasswordVisible = false;
+  bool _isCheckingUpdate = false;
+
+
+
+  @override
+  void initState() {
+    super.initState();
+    _checkForUpdates();
+  }
+
+  Future<void> _checkForUpdates() async {
+    setState(() => _isCheckingUpdate = true);
+
+    try {
+      final updateInfo = await _updateViewModel.checkForUpdate();
+      if (updateInfo != null && mounted) {
+        _showUpdateDialog(updateInfo);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memeriksa update: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isCheckingUpdate = false);
+      }
+    }
+  }
+
+  void _showUpdateDialog(UpdateInfo updateInfo) {
+    int downloadProgress = 0;
+    bool isDownloading = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Pembaruan Tersedia'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Versi baru: ${updateInfo.version}'),
+                const SizedBox(height: 10),
+                const Text('Perubahan:'),
+                Text(updateInfo.changelog),
+                if (isDownloading) ...[
+                  const SizedBox(height: 20),
+                  LinearProgressIndicator(
+                    value: downloadProgress / 100,
+                  ),
+                  Text('$downloadProgress% selesai'),
+                ],
+              ],
+            ),
+            actions: [
+              if (!isDownloading)
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Nanti'),
+                ),
+              TextButton(
+                onPressed: isDownloading
+                    ? null
+                    : () async {
+                  setState(() => isDownloading = true);
+                  try {
+                    // 1. Request permission
+                    if (await Permission.requestInstallPackages.request() != PermissionStatus.granted) {
+                      throw Exception('Install permission denied');
+                    }
+
+                    // 2. Download file
+                    final file = await _updateViewModel.downloadUpdate(
+                      updateInfo.fileName,
+                          (progress) => setState(() => downloadProgress = progress),
+                    );
+
+                    if (file == null) throw Exception('Download failed');
+
+                    // 3. Verifikasi file sebelum install
+                    if (!file.existsSync() || await file.length() == 0) {
+                      throw Exception('Downloaded file is invalid');
+                    }
+
+                    // 4. Install APK
+                    final result = await OpenFile.open(file.path, type: 'application/vnd.android.package-archive');
+
+                    if (result.type != ResultType.done) {
+                      throw Exception('Install failed: ${result.message}');
+                    }
+
+                    if (mounted) Navigator.pop(context);
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error: $e')),
+                      );
+                      setState(() => isDownloading = false);
+                    }
+                  }
+                },
+                child: Text(isDownloading ? 'Mengunduh...' : 'Perbarui'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 
 
   void _login() async {
@@ -242,5 +359,4 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-
 }

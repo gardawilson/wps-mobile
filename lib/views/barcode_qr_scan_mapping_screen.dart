@@ -29,6 +29,9 @@ class _BarcodeQrScanMappingScreenState extends State<BarcodeQrScanMappingScreen>
   bool _isDetected = false;
   final AudioPlayer _audioPlayer = AudioPlayer();
 
+  Set<String> scannedCodes = Set<String>();
+
+
 
   bool _isSaving = false; // State untuk loading
   String _saveMessage = ''; // State untuk pesan
@@ -80,16 +83,22 @@ class _BarcodeQrScanMappingScreenState extends State<BarcodeQrScanMappingScreen>
     super.dispose();
   }
 
-  void _processScanResult(String rawValue) async  {
+  void _processScanResult(String rawValue) async {
+    // Selalu jalankan proses scan
     if (rawValue != _lastScannedCode) { // Hanya proses jika kode berbeda
       _lastScannedCode = rawValue; // Update kode terakhir
+
       final viewModel = Provider.of<MappingLokasiViewModel>(context, listen: false);
       viewModel.processScannedCode(
         rawValue,
         widget.idLokasi,
         onSaveComplete: (success, statusCode, message) {
-
           if (statusCode == 201 || statusCode == 200) {
+            // Tambahkan hasil scan ke dalam list hanya jika belum ada
+            if (!scannedCodes.contains(rawValue)) {
+              scannedCodes.add(rawValue); // Menambahkan kode jika belum ada dalam list
+            }
+
             // Memutar suara accepted.mp3 dengan kecepatan 2x
             _audioPlayer.setPlaybackRate(2.0); // Kecepatan 2x
             _audioPlayer.play(AssetSource('sounds/accepted.mp3'));
@@ -98,14 +107,13 @@ class _BarcodeQrScanMappingScreenState extends State<BarcodeQrScanMappingScreen>
             _audioPlayer.setPlaybackRate(2.0); // Kecepatan 2x
             _audioPlayer.play(AssetSource('sounds/denied.mp3'));
             Vibration.vibrate(duration: 1000);
-
           }
 
           final viewModel = Provider.of<MappingLokasiViewModel>(
               context, listen: false);
           viewModel.fetchData(
-              filterBy: widget.selectedFilter,
-              idLokasi: widget.idLokasi
+            filterBy: widget.selectedFilter,
+            idLokasi: widget.idLokasi,
           );
 
           setState(() {
@@ -128,6 +136,97 @@ class _BarcodeQrScanMappingScreenState extends State<BarcodeQrScanMappingScreen>
   }
 
 
+  void _updateScanResult() async {
+    final viewModel = Provider.of<MappingLokasiViewModel>(context, listen: false);
+
+    // Konversi Set ke List untuk diproses oleh server
+    List<String> scannedCodesList = scannedCodes.toList();
+
+    // Periksa jika ada kode yang dipindai
+    if (scannedCodesList.isNotEmpty) {
+      viewModel.updateScannedCode(
+        scannedCodesList,  // Kirimkan seluruh list yang sudah dipindai
+        widget.idLokasi,
+        onSaveComplete: (success, statusCode, message) {
+          // Fetch data terbaru setelah menyimpan
+          viewModel.fetchData(
+            filterBy: widget.selectedFilter,
+            idLokasi: widget.idLokasi,
+          );
+        },
+      );
+    }
+    else {
+      debugPrint('Duplicate scan detected, skipping.');
+    }
+  }
+
+  Future<bool> _popScannedCodesNotEmpty() async {
+    // Periksa apakah scannedCodes kosong atau null
+    if (scannedCodes.isEmpty) {
+      // Jika kosong, langsung kembali ke halaman sebelumnya tanpa menampilkan dialog
+      return true;
+    }
+
+    // Jika tidak kosong, tampilkan dialog konfirmasi
+    final shouldPop = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Perubahan Belum Disimpan!'),
+          content: const Text('Ada perubahan yang belum disimpan. Apakah Anda ingin menyimpannya sebelum keluar?'),
+          actions: <Widget>[
+            // Tombol "Batal" untuk menutup dialog tanpa melakukan apa-apa
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false), // Tidak kembali
+              child: const Text('Batal'),
+            ),
+            // Tombol "Tidak" untuk kembali tanpa memanggil fungsi update
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true), // Tidak kembali
+              child: const Text('Tidak'),
+            ),
+            // Tombol "Ya" untuk memanggil fungsi update dan kembali ke halaman sebelumnya
+            TextButton(
+              onPressed: () {
+                // Panggil fungsi untuk memperbarui hasil scan
+                _updateScanResult();
+
+                // Clear scannedCodes setelah konfirmasi
+                setState(() {
+                  scannedCodes.clear(); // Kosongkan scannedCodes
+                });
+
+                // Kembali ke halaman sebelumnya setelah update dan clear
+                Navigator.of(context).pop(true); // Kembali ke halaman sebelumnya
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Row(
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.white),
+                        SizedBox(width: 10),
+                        Text('Lokasi berhasil diperbaharui!'),
+                      ],
+                    ),
+                    backgroundColor: Colors.green,
+                    duration: Duration(seconds: 3),
+                  ),
+                );
+              },
+              child: const Text('Simpan'),
+            ),
+          ],
+        );
+      },
+    );
+
+    // Mengembalikan nilai apakah user ingin kembali
+    return shouldPop ?? false;
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -135,8 +234,9 @@ class _BarcodeQrScanMappingScreenState extends State<BarcodeQrScanMappingScreen>
     final scanAreaSize = screenWidth * 0.6;
     final count = Provider.of<MappingLokasiViewModel>(context).totalData;
 
-
-    return Scaffold(
+    return WillPopScope(
+        onWillPop: _popScannedCodesNotEmpty, // Memanggil fungsi konfirmasi keluar
+    child:  Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
@@ -159,6 +259,89 @@ class _BarcodeQrScanMappingScreenState extends State<BarcodeQrScanMappingScreen>
 
               // Toggle torch (flashlight)
               cameraController.toggleTorch();
+            },
+          ),
+          // Tombol untuk menampilkan dialog dengan list scannedCodes
+          IconButton(
+            icon: Icon(Icons.list, color: Colors.black),
+            onPressed: () {
+              // Tampilkan dialog dengan data scannedCodes
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: Text('Hasil Scan ( ${scannedCodes.length} )'),
+                    content: SizedBox(
+                      width: double.minPositive,
+                      height: 300,
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        physics: const ClampingScrollPhysics(),
+                        itemCount: scannedCodes.length,
+                        itemBuilder: (context, index) {
+                          final item = scannedCodes.toList()[index];
+                          return Dismissible(
+                            key: Key(item), // Key unik untuk animasi
+                            direction: DismissDirection.endToStart, // Geser ke kiri untuk hapus
+                            background: Container(
+                              color: Colors.red,
+                              alignment: Alignment.centerRight,
+                              padding: EdgeInsets.only(right: 20),
+                              child: Icon(Icons.delete, color: Colors.white),
+                            ),
+                            onDismissed: (direction) {
+                              setState(() {
+                                scannedCodes.remove(item);
+                              });
+
+                              // ScaffoldMessenger.of(context).showSnackBar(
+                              //   SnackBar(content: Text('"$item" dihapus ${scannedCodes.length}')),
+                              // );
+                            },
+                            child: Column(
+                              children: [
+                                ListTile(
+                                  title: Text(item),
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                                ),
+                                Divider(height: 1),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text('Batal'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          _updateScanResult();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Row(
+                                children: [
+                                  Icon(Icons.check_circle, color: Colors.white),
+                                  SizedBox(width: 10),
+                                  Text('Lokasi berhasil diperbaharui!'),
+                                ],
+                              ),
+                              backgroundColor: Colors.green,
+                              duration: Duration(seconds: 3),
+                            ),
+                          );
+                          Navigator.pop(context);
+                          Navigator.pop(context);
+                        },
+                        child: Text('Simpan'),
+                      ),
+                    ],
+                  );
+                },
+              );
+
             },
           ),
         ],
@@ -296,7 +479,9 @@ class _BarcodeQrScanMappingScreenState extends State<BarcodeQrScanMappingScreen>
             ),
           ),
         ],
+       ),
       ),
     );
+
   }
 }

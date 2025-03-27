@@ -46,6 +46,11 @@ dependencies:
   path_provider: ^2.0.11
   qr_flutter: ^4.0.0
   audioplayers: ^6.4.0  # Versi terbaru yang dapat menangani versi http lebih baru
+  fluttertoast: ^8.0.9
+  smb_connect: ^0.0.9
+  package_info_plus: ^8.0.0
+  open_file: ^3.3.1
+
 
 
 

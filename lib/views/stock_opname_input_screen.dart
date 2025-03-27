@@ -65,7 +65,7 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.noSO,
+          '${widget.tgl} ( ${widget.noSO} )',
           style: const TextStyle(color: Colors.white),
         ),
         automaticallyImplyLeading: false,
@@ -133,7 +133,7 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
                     final noLabel = viewModel.noLabelList[index];
 
                     return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                      padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [

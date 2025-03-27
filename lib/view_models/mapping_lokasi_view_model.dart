@@ -166,7 +166,7 @@ class MappingLokasiViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final url = Uri.parse('http://192.168.11.153:5000/api/label-list/mapping');
+      final url = Uri.parse('http://192.168.11.153:5000/api/label-list/check');
       String? token = await _getToken();
 
       final headers = {
@@ -193,7 +193,6 @@ class MappingLokasiViewModel extends ChangeNotifier {
       final body = jsonEncode({
         'resultscanned': scannedCode,
         'idlokasi': idLokasi,
-        'forceSave': forceSave,  // Menggunakan flag forceSave
       });
 
       final response = await http.post(url, headers: headers, body: body);
@@ -215,4 +214,67 @@ class MappingLokasiViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> updateScannedCode(
+      List<String> scannedCodes,  // Mengubah menjadi List<String> untuk menerima lebih dari satu kode
+      String idLokasi, {
+        Function(bool, int, String)? onSaveComplete,
+        bool forceSave = false, // Flag untuk memaksa penyimpanan
+      }) async {
+    isSaving = true;
+    saveMessage = 'Menyimpan...';
+    notifyListeners();
+
+    try {
+      final url = Uri.parse('http://192.168.11.153:5000/api/label-list/mapping-multiple');
+      String? token = await _getToken();
+
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+
+      if (token == null || token.isEmpty) {
+        saveMessage = 'Token tidak ditemukan. Silakan login ulang.';
+        onSaveComplete?.call(false, 401, saveMessage); // Return status code 401
+        isSaving = false;
+        notifyListeners();
+        return;
+      }
+
+      if (idLokasi.isEmpty) {
+        saveMessage = 'IdLokasi tidak boleh kosong.';
+        onSaveComplete?.call(false, 400, saveMessage); // Return status code 400
+        isSaving = false;
+        notifyListeners();
+        return;
+      }
+
+      // Mengubah parameter body menjadi format untuk multiple scanned codes
+      final body = jsonEncode({
+        'resultscannedList': scannedCodes,  // Menyediakan list hasil scan
+        'idlokasi': idLokasi,
+      });
+
+      final response = await http.post(url, headers: headers, body: body);
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        // Jika statusCode 201 atau jika forceSave true, simpan data meskipun tidak ada data
+        saveMessage = 'Data berhasil disimpan!';
+        onSaveComplete?.call(true, response.statusCode, saveMessage); // Return status code 200 or 201
+      } else {
+        final responseJson = jsonDecode(response.body);
+        saveMessage = responseJson['message'] ?? 'Gagal menyimpan';
+        onSaveComplete?.call(false, response.statusCode, saveMessage); // Return status code error
+      }
+    } catch (e) {
+      saveMessage = 'Terjadi kesalahan: $e';
+      onSaveComplete?.call(false, 500, saveMessage); // Return status code 500 for error
+    } finally {
+      isSaving = false;
+      notifyListeners();
+    }
+  }
+
+
 }
