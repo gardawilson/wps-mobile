@@ -4,6 +4,8 @@ import 'dart:convert';
 import '../models/stock_opname_input_model.dart';
 import '../models/combined_label_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../constants/api_constants.dart';
+
 
 
 class StockOpnameInputViewModel extends ChangeNotifier {
@@ -60,8 +62,15 @@ class StockOpnameInputViewModel extends ChangeNotifier {
 
     try {
       final uri = Uri.parse(
-          'http://192.168.11.153:5000/api/no-stock-opname/$selectedNoSO?page=1&pageSize=$initialPageSize&filterBy=${filterBy ?? 'all'}&idlokasi=${idLokasi ?? 'all'}'
+        ApiConstants.labelSOList(
+          selectedNoSO: selectedNoSO,
+          page: 1,
+          pageSize: initialPageSize,
+          filterBy: filterBy,
+          idLokasi: idLokasi,
+        ),
       );
+
 
       String? token = await _getToken();
 
@@ -119,7 +128,15 @@ class StockOpnameInputViewModel extends ChangeNotifier {
 
     try {
       final uri = Uri.parse(
-          'http://192.168.11.153:5000/api/no-stock-opname/$selectedNoSO?page=$page&pageSize=$loadMoreSize&filterBy=${currentFilter ?? 'all'}&idLokasi=${currentLocation ?? 'all'}');
+        ApiConstants.labelSOListLoadMore(
+          selectedNoSO: selectedNoSO,
+          page: page,
+          loadMoreSize: loadMoreSize,
+          filterBy: currentFilter,
+          idLokasi: currentLocation,
+        ),
+      );
+
 
       String? token = await _getToken();
 
@@ -178,7 +195,7 @@ class StockOpnameInputViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final url = Uri.parse('http://192.168.11.153:5000/api/no-stock-opname/$noSO/scan');
+      final url = Uri.parse(ApiConstants.scanLabel(noSO));
       String? token = await _getToken();
 
       final headers = {

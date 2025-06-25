@@ -6,10 +6,11 @@ import 'package:smb_connect/smb_connect.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/update_model.dart';
 import 'dart:math';
+import 'dart:math';
 import 'package:crypto/crypto.dart'; // Untuk validasi file
 
 class UpdateViewModel {
-  static const String _sharePath = "RU New/UpdateMobile";
+  static const String _sharePath = "RU New/wps_tablet_mobile/update_mobile";
 
   Future<UpdateInfo?> checkForUpdate() async {
     SmbConnect? connect;
@@ -22,10 +23,18 @@ class UpdateViewModel {
       final lines = content.split('\n').where((line) => line.trim().isNotEmpty).toList();
       if (lines.isEmpty) throw Exception('Invalid version.txt format');
 
+      final remoteVersion = lines[0].trim();
       final packageInfo = await PackageInfo.fromPlatform();
+      final localVersion = packageInfo.version;
+
+      // **Tambahkan perbandingan versi**
+      if (_compareVersions(localVersion, remoteVersion) >= 0) {
+        print("Versi terbaru sudah digunakan ($localVersion)");
+        return null; // Tidak ada update jika versi saat ini >= versi dari Notepad
+      }
 
       return UpdateInfo(
-        version: lines[0].trim(),
+        version: remoteVersion,
         fileName: lines.length > 1 ? lines[1].trim() : 'app-release.apk',
         changelog: lines.length > 2 ? lines.sublist(2).join('\n').trim() : '',
       );
@@ -36,6 +45,7 @@ class UpdateViewModel {
       await connect?.close();
     }
   }
+
 
   Future<File?> downloadUpdate(String fileName, void Function(int) onProgress) async {
     SmbConnect? connect;

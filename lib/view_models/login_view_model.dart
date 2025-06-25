@@ -2,15 +2,17 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart'; // Import SharedPreferences
 import '../models/user_model.dart';
+import '../constants/api_constants.dart';
+
+
 
 class LoginViewModel {
   Future<bool> validateLogin(User user) async {
-    final url = Uri.parse('http://192.168.11.153:5000/api/login'); // Ganti dengan IP server yang benar
 
     try {
       // Kirim request dengan header Content-Type: application/json
       final response = await http.post(
-        url,
+        Uri.parse(ApiConstants.login),
         headers: {
           'Content-Type': 'application/json',  // Pastikan Content-Type JSON
         },

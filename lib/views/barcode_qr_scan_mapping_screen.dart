@@ -225,8 +225,6 @@ class _BarcodeQrScanMappingScreenState extends State<BarcodeQrScanMappingScreen>
     return shouldPop ?? false;
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -240,7 +238,7 @@ class _BarcodeQrScanMappingScreenState extends State<BarcodeQrScanMappingScreen>
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
-          'Lokasi ${widget.idLokasi} | ${count} Label',
+          '${widget.idLokasi} | ${count} Label',
           style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white, // Set background color to white

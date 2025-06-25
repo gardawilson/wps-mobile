@@ -4,6 +4,8 @@ import 'dart:convert';
 import '../models/mapping_lokasi_model.dart';
 import '../models/combined_label_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../constants/api_constants.dart';
+
 
 class MappingLokasiViewModel extends ChangeNotifier {
   String errorMessage = '';
@@ -49,9 +51,13 @@ class MappingLokasiViewModel extends ChangeNotifier {
     print("🔍 Fetch Data: FilterBy: $filterBy, IdLokasi: $idLokasi");
 
     try {
-      final uri = Uri.parse(
-          'http://192.168.11.153:5000/api/label-list?page=1&pageSize=$initialPageSize&filterBy=${filterBy ?? 'all'}&idlokasi=${idLokasi ?? 'all'}'
-      );
+      final uri = Uri.parse(ApiConstants.labelList(
+        page: 1,
+        pageSize: initialPageSize,
+        filterBy: filterBy,
+        idLokasi: idLokasi,
+      ));
+
 
       String? token = await _getToken();
       if (token == null) {
@@ -103,9 +109,12 @@ class MappingLokasiViewModel extends ChangeNotifier {
     int page = (currentStart ~/ loadMoreSize) + 1;
 
     try {
-      final uri = Uri.parse(
-          'http://192.168.11.153:5000/api/label-list?page=$page&pageSize=$loadMoreSize&filterBy=${currentFilter ?? 'all'}&idlokasi=${currentLocation ?? 'all'}'
-      );
+      final uri = Uri.parse(ApiConstants.labelList(
+        page: page,
+        pageSize: loadMoreSize,
+        filterBy: currentFilter,
+        idLokasi: currentLocation,
+      ));
 
       String? token = await _getToken();
       if (token == null) {
@@ -166,7 +175,7 @@ class MappingLokasiViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final url = Uri.parse('http://192.168.11.153:5000/api/label-list/check');
+      final url = Uri.parse(ApiConstants.checkLabel);
       String? token = await _getToken();
 
       final headers = {
@@ -226,7 +235,7 @@ class MappingLokasiViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final url = Uri.parse('http://192.168.11.153:5000/api/label-list/mapping-multiple');
+      final url = Uri.parse(ApiConstants.saveChanges);
       String? token = await _getToken();
 
       final headers = {

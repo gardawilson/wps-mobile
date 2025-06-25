@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/label_model_st.dart';
 import '../models/label_model_s4s.dart';
+import '../constants/api_constants.dart';
+
 
 class PreviewLabelViewModel extends ChangeNotifier {
   dynamic label;   // Menyimpan data label yang didapatkan dari API (LabelModelST atau LabelModelS4S)
@@ -34,7 +36,7 @@ class PreviewLabelViewModel extends ChangeNotifier {
       }
 
       final response = await http.get(
-        Uri.parse('http://192.168.11.153:5000/api/label-data/$nolabel'),
+        Uri.parse(ApiConstants.labelData(nolabel)),
         headers: {
           'Authorization': 'Bearer $token',
         },

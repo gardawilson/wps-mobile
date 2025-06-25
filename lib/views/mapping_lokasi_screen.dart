@@ -177,13 +177,13 @@ class _MappingLokasiScreenState extends State<MappingLokasiScreen> {
               _showScanBarQRCode(context);
             },
           ),
-          SpeedDialChild(
-            child: const Icon(Icons.edit_note),
-            label: 'Input Manual',
-            onTap: () {
-              _showAddManualDialog(context);
-            },
-          ),
+          // SpeedDialChild(
+          //   child: const Icon(Icons.edit_note),
+          //   label: 'Input Manual',
+          //   onTap: () {
+          //     _showAddManualDialog(context);
+          //   },
+          // ),
         ],
       ),
     );

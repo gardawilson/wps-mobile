@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/stock_opname_model.dart';
+import '../constants/api_constants.dart';
+
 
 class StockOpnameViewModel extends ChangeNotifier {
   List<StockOpname> _stockOpnameList = [];
@@ -24,7 +26,6 @@ class StockOpnameViewModel extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    const String apiUrl = 'http://192.168.11.153:5000/api/no-stock-opname';
     try {
       // Ambil token dari SharedPreferences
       String? token = await _getToken();
@@ -38,7 +39,7 @@ class StockOpnameViewModel extends ChangeNotifier {
       }
 
       final response = await http.get(
-        Uri.parse(apiUrl),
+        Uri.parse(ApiConstants.listNoSO),
         headers: {
           'Authorization': 'Bearer $token', // Menambahkan token di header Authorization
         },

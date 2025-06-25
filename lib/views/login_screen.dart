@@ -21,7 +21,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final UpdateViewModel _updateViewModel = UpdateViewModel();
   bool _isPasswordVisible = false;
   bool _isCheckingUpdate = false;
-
+  String _errorMessage = '';
+  bool _isLoading = false; // Untuk menangani loading state
 
 
   @override
@@ -62,6 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
             title: const Text('Pembaruan Tersedia'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Versi baru: ${updateInfo.version}'),
                 const SizedBox(height: 10),
@@ -72,7 +74,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   LinearProgressIndicator(
                     value: downloadProgress / 100,
                   ),
-                  Text('$downloadProgress% selesai'),
+                  Text('Downloading $downloadProgress%'),
                 ],
               ],
             ),
@@ -134,19 +136,43 @@ class _LoginScreenState extends State<LoginScreen> {
 
 
   void _login() async {
-    User user = User(
-      username: _usernameController.text,
-      password: _passwordController.text,
-    );
+    // Clear previous errors
+    _clearErrorMessage();
 
-    bool isValid = await _viewModel.validateLogin(user);
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text.trim();
 
-    if (isValid) {
-      Navigator.pushReplacementNamed(context, '/home');
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid login credentials')),
+    // Validate empty fields
+    if (username.isEmpty || password.isEmpty) {
+      setState(() => _errorMessage = 'Username dan password harus diisi');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      User user = User(
+        username: username,
+        password: password,
       );
+
+      bool isValid = await _viewModel.validateLogin(user);
+
+      if (isValid) {
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        setState(() => _errorMessage = 'Username atau password salah!');
+      }
+    } catch (e) {
+      setState(() => _errorMessage = 'Terjadi kesalahan: ${e.toString()}');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _clearErrorMessage() {
+    if (_errorMessage.isNotEmpty) {
+      setState(() => _errorMessage = '');
     }
   }
 
@@ -159,199 +185,170 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Deteksi apakah keyboard sedang muncul
+    double keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    bool isKeyboardVisible = keyboardHeight > 0;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
-          // Background coklat penuh di belakang
+          // Gradient Background
           Container(
-            width: double.infinity,
-            height: double.infinity,
-            color: Color(0xFF755330), // Mengganti warna background dengan #6c3c0c
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF6D4D8C), // purple tone
+                  Color(0xFFF9A825), // amber/orange tone
+                ],
+              ),
+            ),
           ),
 
-          // Top section (header) dengan logo di depan background coklat
+          // Welcome text
           Positioned(
-            top: 0,
+            top: 120,
             left: 0,
             right: 0,
-            child: Container(
-              height: 220,
-              width: double.infinity,
-              color: Colors.transparent, // Menggunakan transparan agar background coklat tetap terlihat
-              child: Center(
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 300),
+              // Sembunyikan welcome text ketika keyboard muncul (opsional)
+              opacity: isKeyboardVisible ? 0.0 : 1.0,
+              child: Text(
+                'Welcome to WPS!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 32,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+
+          // Centered login card dengan animasi untuk keyboard
+          AnimatedPadding(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            // Geser ke atas ketika keyboard muncul
+            padding: EdgeInsets.only(
+              bottom: isKeyboardVisible ? keyboardHeight * 0.7 : 0,
+            ),
+            child: Center(
+              child: SingleChildScrollView(
                 child: Container(
-                  width: 60,
-                  height: 60,
+                  width: 400,
+                  height: 450,
+                  margin: const EdgeInsets.symmetric(horizontal: 32),
+                  padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.white.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 10,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Transform.scale(
-                      scale: 3.0, // Atur angka ini untuk zoom gambar
-                      child: ColorFiltered(
-                        colorFilter: ColorFilter.mode(Colors.white.withOpacity(1.0), BlendMode.srcATop),
-                        child: Image.asset(
-                          'assets/images/icon_without_bg.png',  // Ganti dengan path logo Anda
-                          fit: BoxFit.contain,
+                  child: Column(
+                    children: [
+                      Image.asset(
+                        'assets/images/icon_without_bg.png',
+                        width: 120,
+                        height: 120,
+                      ),
+
+                      Divider(
+                        color: Colors.grey,      // Warna garis
+                        thickness: 0.5,            // Ketebalan garis
+                        height: 25,              // Tinggi space yang ditempati
+                      ),
+
+                      const SizedBox(height: 24),
+                      TextField(
+                        controller: _usernameController,
+                        decoration: InputDecoration(
+                          labelText: 'Username',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _passwordController,
+                        obscureText: !_isPasswordVisible,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _isPasswordVisible = !_isPasswordVisible;
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                      if (_errorMessage.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: Text(
+                            _errorMessage,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _login,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          child: _isLoading
+                              ? const CircularProgressIndicator(color: Colors.white)
+                              : const Text('Login'),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
           ),
 
-          // Halaman login di depan background coklat
+          // Copyright - tetap di posisi bawah
           Positioned(
-            top: 220, // Agar login muncul tepat setelah header
+            bottom: 20,
             left: 0,
             right: 0,
-            bottom: 0, // Agar login container mengisi sisa layar
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 300),
+              // Sembunyikan copyright ketika keyboard muncul (opsional)
+              opacity: isKeyboardVisible ? 0.0 : 1.0,
+              child: Text(
+                'Copyright © 2025, Utama Corporation\nAll rights reserved.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.8),
+                  fontSize: 12,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 20),
-                  const Center(
-                    child: Text(
-                      'Login',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-                  const Text(
-                    'Username',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _usernameController,
-                    decoration: InputDecoration(
-                      hintText: 'Username',
-                      hintStyle: TextStyle(color: Colors.grey.shade400),
-                      filled: true,
-                      fillColor: Colors.grey.shade50,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Password',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _passwordController,
-                    obscureText: !_isPasswordVisible, // Menyembunyikan atau menampilkan password
-                    decoration: InputDecoration(
-                      hintText: '••••••••',
-                      hintStyle: TextStyle(color: Colors.grey.shade400),
-                      filled: true,
-                      fillColor: Colors.grey.shade50,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _isPasswordVisible ? Icons.visibility : Icons.visibility_off, // Ganti ikon berdasarkan status
-                          color: Colors.grey.shade600,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _isPasswordVisible = !_isPasswordVisible; // Toggle status password
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 40),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: _login,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF755330),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: const Text(
-                        'Login',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Center(
-                    child: TextButton(
-                      onPressed: () {},
-                      child: RichText(
-                        text: TextSpan(
-                          text: 'Don\'t have any account? ',
-                          style: TextStyle(
-                            color: Colors.grey.shade800,
-                            fontSize: 14,
-                          ),
-                          children: const [
-                            TextSpan(
-                              text: 'Sign Up',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
               ),
             ),
           ),
