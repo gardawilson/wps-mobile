@@ -3,9 +3,10 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../models/mapping_lokasi_model.dart';
 import '../models/combined_label_model.dart';
+import '../models/label_detail_model.dart';
+import '../models/label_response_model.dart'; // Add this import
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/api_constants.dart';
-
 
 class MappingLokasiViewModel extends ChangeNotifier {
   String errorMessage = '';
@@ -29,6 +30,10 @@ class MappingLokasiViewModel extends ChangeNotifier {
 
   List<MappingLokasiModel> blokList = [];
 
+  // Add new properties for using LabelResponseModel
+  LabelResponseModel? labelResponse;
+  LabelSummary? summary;
+
   // Fungsi untuk mengambil token dari SharedPreferences
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -46,6 +51,8 @@ class MappingLokasiViewModel extends ChangeNotifier {
     noLabelFound = true;
     currentFilter = filterBy;
     currentLocation = idLokasi;
+    labelResponse = null; // Reset response model
+    summary = null; // Reset summary
     notifyListeners();
 
     print("🔍 Fetch Data: FilterBy: $filterBy, IdLokasi: $idLokasi");
@@ -57,7 +64,6 @@ class MappingLokasiViewModel extends ChangeNotifier {
         filterBy: filterBy,
         idLokasi: idLokasi,
       ));
-
 
       String? token = await _getToken();
       if (token == null) {
@@ -76,23 +82,67 @@ class MappingLokasiViewModel extends ChangeNotifier {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final List<dynamic> lokasiData = data['mstLokasi'] ?? [];
-        final List<dynamic> noSOData = data['noLabelList'] ?? [];
 
-        noLabelFound = data['noLabelFound'] ?? true;
-        totalData = data['totalData'] ?? 0;
+        try {
+          // Use LabelResponseModel instead of manual parsing
+          labelResponse = LabelResponseModel.fromJson(data);
 
-        blokList = lokasiData.map((json) => MappingLokasiModel.fromJson(json)).toList();
-        noLabelList = noSOData.map((json) => CombinedLabelModel.fromJson(json)).toList();
+          // Extract data from model
+          noLabelList = labelResponse!.noLabelList;
+          noLabelFound = labelResponse!.noLabelFound;
+          totalData = labelResponse!.totalData;
+          summary = labelResponse!.summary;
 
-        hasMoreData = noLabelList.length < totalData;
-        errorMessage = '';
-        currentStart += noLabelList.length;
+          // Handle blokList (this seems to be separate from LabelResponseModel)
+          final List<dynamic> lokasiData = data['mstLokasi'] ?? [];
+          blokList = lokasiData.map((json) => MappingLokasiModel.fromJson(json)).toList();
+
+          hasMoreData = labelResponse!.hasNextPage;
+          errorMessage = '';
+          currentStart += noLabelList.length;
+
+          print("📊 Total labels loaded: ${noLabelList.length}");
+          print("📈 Summary - Total M3: ${summary?.formattedTotalM3}, Total Jumlah: ${summary?.formattedTotalJumlah}");
+          print("📄 Pagination: ${labelResponse!.currentDataRange}");
+          print("📊 Progress: ${labelResponse!.loadedPercentage.toStringAsFixed(1)}%");
+
+        } catch (e) {
+          print("❌ Error parsing with LabelResponseModel: $e");
+          print("📋 Falling back to manual parsing");
+
+          // Fallback to manual parsing if model parsing fails
+          final List<dynamic> lokasiData = data['mstLokasi'] ?? [];
+          final List<dynamic> noSOData = data['noLabelList'] ?? [];
+
+          noLabelFound = data['noLabelFound'] ?? true;
+          totalData = data['totalData'] ?? 0;
+
+          blokList = lokasiData.map((json) => MappingLokasiModel.fromJson(json)).toList();
+
+          noLabelList = noSOData.map((json) {
+            try {
+              return CombinedLabelModel.fromJson(json);
+            } catch (e) {
+              print("❌ Error parsing label data: $e");
+              return CombinedLabelModel(
+                combinedLabel: json['CombinedLabel'] ?? 'Unknown',
+                labelType: json['LabelType'],
+                labelLocation: json['LabelLocation'],
+                details: [],
+              );
+            }
+          }).toList();
+
+          hasMoreData = noLabelList.length < totalData;
+          errorMessage = '';
+          currentStart += noLabelList.length;
+        }
       } else {
         errorMessage = 'Gagal memuat data (${response.statusCode}): ${response.body}';
       }
     } catch (e) {
       errorMessage = 'Error: $e';
+      print("❌ Fetch Data Error: $e");
     } finally {
       isLoading = false;
       isInitialLoading = false;
@@ -103,18 +153,27 @@ class MappingLokasiViewModel extends ChangeNotifier {
 
   Future<void> loadMoreData() async {
     if (isLoading || !hasMoreData) return;
+
+    // Use the helper method from LabelResponseModel if available
+    if (labelResponse != null && !labelResponse!.hasNextPage) {
+      hasMoreData = false;
+      return;
+    }
+
     isLoading = true;
     notifyListeners();
 
-    int page = (currentStart ~/ loadMoreSize) + 1;
+    int nextPage = labelResponse?.nextPage ?? ((currentStart ~/ loadMoreSize) + 1);
 
     try {
       final uri = Uri.parse(ApiConstants.labelList(
-        page: page,
+        page: nextPage,
         pageSize: loadMoreSize,
         filterBy: currentFilter,
         idLokasi: currentLocation,
       ));
+
+      print("🌐 Request URL: ${uri.toString()}");
 
       String? token = await _getToken();
       if (token == null) {
@@ -133,34 +192,151 @@ class MappingLokasiViewModel extends ChangeNotifier {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final List<dynamic> newData = data['noLabelList'] ?? [];
 
-        if (newData.isEmpty) {
-          hasMoreData = false;
-          notifyListeners();
-          return;
+        try {
+          // Parse new response using LabelResponseModel
+          final newLabelResponse = LabelResponseModel.fromJson(data);
+
+          if (newLabelResponse.noLabelList.isEmpty) {
+            hasMoreData = false;
+            notifyListeners();
+            return;
+          }
+
+          // Add new data to existing list
+          noLabelList.addAll(newLabelResponse.noLabelList);
+
+          // Update response object for pagination info
+          labelResponse = LabelResponseModel(
+            noLabelList: noLabelList,
+            noLabelFound: newLabelResponse.noLabelFound,
+            currentPage: newLabelResponse.currentPage,
+            pageSize: newLabelResponse.pageSize,
+            totalData: newLabelResponse.totalData,
+            totalPages: newLabelResponse.totalPages,
+            summary: newLabelResponse.summary,
+          );
+
+          // Update summary if available
+          if (newLabelResponse.summary != null) {
+            summary = newLabelResponse.summary;
+          }
+
+          hasMoreData = labelResponse!.hasNextPage;
+          errorMessage = '';
+
+          print("📊 Total labels after load more: ${noLabelList.length}");
+          print("📄 Current page: ${labelResponse!.currentPage}/${labelResponse!.totalPages}");
+          print("📊 Data range: ${labelResponse!.currentDataRange}");
+          print("📈 Loaded percentage: ${labelResponse!.loadedPercentage.toStringAsFixed(1)}%");
+
+        } catch (e) {
+          print("❌ Error parsing load more with LabelResponseModel: $e");
+          print("📋 Falling back to manual parsing");
+
+          // Fallback to manual parsing
+          final List<dynamic> newData = data['noLabelList'] ?? [];
+
+          if (newData.isEmpty) {
+            hasMoreData = false;
+            notifyListeners();
+            return;
+          }
+
+          final List<CombinedLabelModel> newLabels = newData.map((json) {
+            try {
+              return CombinedLabelModel.fromJson(json);
+            } catch (e) {
+              print("❌ Error parsing load more data: $e");
+              return CombinedLabelModel(
+                combinedLabel: json['CombinedLabel'] ?? 'Unknown',
+                labelType: json['LabelType'],
+                labelLocation: json['LabelLocation'],
+                details: [],
+              );
+            }
+          }).toList();
+
+          noLabelList.addAll(newLabels);
+          hasMoreData = noLabelList.length < totalData;
+          currentStart += loadMoreSize;
+          errorMessage = '';
         }
-
-        noLabelList.addAll(newData.map((json) => CombinedLabelModel.fromJson(json)).toList());
-        hasMoreData = noLabelList.length < totalData;
-        currentStart += loadMoreSize;
-        errorMessage = '';
       } else {
         errorMessage = 'Gagal memuat data tambahan.';
       }
     } catch (e) {
       errorMessage = 'Error: $e';
+      print("❌ Load More Error: $e");
     } finally {
       isLoading = false;
       notifyListeners();
     }
   }
 
+  // Helper methods untuk mendapatkan informasi agregat
+  int getTotalDetailsCount() {
+    return noLabelList.fold(0, (sum, label) => sum + label.totalDetails);
+  }
+
+  int getTotalBatangCount() {
+    return noLabelList.fold(0, (sum, label) => sum + label.totalBatang);
+  }
+
+  List<CombinedLabelModel> getLabelsWithDetails() {
+    return noLabelList.where((label) => label.hasDetails).toList();
+  }
+
+  List<CombinedLabelModel> getLabelsWithoutDetails() {
+    return noLabelList.where((label) => !label.hasDetails).toList();
+  }
+
+  // Method untuk mendapatkan detail berdasarkan label
+  List<LabelDetailModel> getDetailsByLabel(String labelName) {
+    final label = noLabelList.firstWhere(
+          (label) => label.combinedLabel == labelName,
+      orElse: () => CombinedLabelModel(combinedLabel: ''),
+    );
+    return label.details;
+  }
+
+  // New helper methods that utilize the LabelResponseModel's capabilities
+
+  // Get pagination info
+  String get paginationInfo => labelResponse?.currentDataRange ?? '';
+
+  // Get loading percentage
+  double get loadingPercentage => labelResponse?.loadedPercentage ?? 0.0;
+
+  // Get summary info
+  String get totalM3Formatted => summary?.formattedTotalM3 ?? '0.00';
+  String get totalJumlahFormatted => summary?.formattedTotalJumlah ?? '0';
+  double get totalM3AsDouble => summary?.totalM3AsDouble ?? 0.0;
+  int get totalJumlah => summary?.totalJumlah ?? 0;
+
+  // Check if we have summary data
+  bool get hasSummary => summary != null;
+
+  // Get current page info
+  int get currentPage => labelResponse?.currentPage ?? 1;
+  int get totalPages => labelResponse?.totalPages ?? 1;
+  bool get hasNextPage => labelResponse?.hasNextPage ?? false;
+  bool get hasPreviousPage => labelResponse?.hasPreviousPage ?? false;
+
+  // Get page size info
+  int get pageSize => labelResponse?.pageSize ?? initialPageSize;
+  int get currentPageItemCount => labelResponse?.currentPageItemCount ?? noLabelList.length;
+
+  // Check if we have data
+  bool get hasData => labelResponse?.hasData ?? noLabelList.isNotEmpty;
+
   void resetData() {
     noLabelList.clear();
     totalData = 0;
     hasMoreData = true;
     errorMessage = '';
+    labelResponse = null;
+    summary = null;
     notifyListeners();
   }
 
@@ -168,7 +344,7 @@ class MappingLokasiViewModel extends ChangeNotifier {
       String scannedCode,
       String idLokasi, {
         Function(bool, int, String)? onSaveComplete,
-        bool forceSave = false, // Flag untuk memaksa penyimpanan
+        bool forceSave = false,
       }) async {
     isSaving = true;
     saveMessage = 'Menyimpan...';
@@ -185,7 +361,7 @@ class MappingLokasiViewModel extends ChangeNotifier {
 
       if (token == null || token.isEmpty) {
         saveMessage = 'Token tidak ditemukan. Silakan login ulang.';
-        onSaveComplete?.call(false, 401, saveMessage); // Return status code 401
+        onSaveComplete?.call(false, 401, saveMessage);
         isSaving = false;
         notifyListeners();
         return;
@@ -193,7 +369,7 @@ class MappingLokasiViewModel extends ChangeNotifier {
 
       if (idLokasi.isEmpty) {
         saveMessage = 'IdLokasi tidak boleh kosong.';
-        onSaveComplete?.call(false, 400, saveMessage); // Return status code 400
+        onSaveComplete?.call(false, 400, saveMessage);
         isSaving = false;
         notifyListeners();
         return;
@@ -207,17 +383,17 @@ class MappingLokasiViewModel extends ChangeNotifier {
       final response = await http.post(url, headers: headers, body: body);
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        // Jika statusCode 201 atau jika forceSave true, simpan data meskipun tidak ada data
         saveMessage = 'Data berhasil disimpan!';
-        onSaveComplete?.call(true, response.statusCode, saveMessage); // Return status code 201
+        onSaveComplete?.call(true, response.statusCode, saveMessage);
       } else {
         final responseJson = jsonDecode(response.body);
         saveMessage = responseJson['message'] ?? 'Gagal menyimpan';
-        onSaveComplete?.call(false, response.statusCode, saveMessage); // Return status code error
+        onSaveComplete?.call(false, response.statusCode, saveMessage);
       }
     } catch (e) {
       saveMessage = 'Terjadi kesalahan: $e';
-      onSaveComplete?.call(false, 500, saveMessage); // Return status code 500 for error
+      onSaveComplete?.call(false, 500, saveMessage);
+      print("❌ Process Scanned Code Error: $e");
     } finally {
       isSaving = false;
       notifyListeners();
@@ -225,10 +401,10 @@ class MappingLokasiViewModel extends ChangeNotifier {
   }
 
   Future<void> updateScannedCode(
-      List<String> scannedCodes,  // Mengubah menjadi List<String> untuk menerima lebih dari satu kode
+      List<String> scannedCodes,
       String idLokasi, {
         Function(bool, int, String)? onSaveComplete,
-        bool forceSave = false, // Flag untuk memaksa penyimpanan
+        bool forceSave = false,
       }) async {
     isSaving = true;
     saveMessage = 'Menyimpan...';
@@ -245,7 +421,7 @@ class MappingLokasiViewModel extends ChangeNotifier {
 
       if (token == null || token.isEmpty) {
         saveMessage = 'Token tidak ditemukan. Silakan login ulang.';
-        onSaveComplete?.call(false, 401, saveMessage); // Return status code 401
+        onSaveComplete?.call(false, 401, saveMessage);
         isSaving = false;
         notifyListeners();
         return;
@@ -253,37 +429,34 @@ class MappingLokasiViewModel extends ChangeNotifier {
 
       if (idLokasi.isEmpty) {
         saveMessage = 'IdLokasi tidak boleh kosong.';
-        onSaveComplete?.call(false, 400, saveMessage); // Return status code 400
+        onSaveComplete?.call(false, 400, saveMessage);
         isSaving = false;
         notifyListeners();
         return;
       }
 
-      // Mengubah parameter body menjadi format untuk multiple scanned codes
       final body = jsonEncode({
-        'resultscannedList': scannedCodes,  // Menyediakan list hasil scan
+        'resultscannedList': scannedCodes,
         'idlokasi': idLokasi,
       });
 
       final response = await http.post(url, headers: headers, body: body);
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        // Jika statusCode 201 atau jika forceSave true, simpan data meskipun tidak ada data
         saveMessage = 'Data berhasil disimpan!';
-        onSaveComplete?.call(true, response.statusCode, saveMessage); // Return status code 200 or 201
+        onSaveComplete?.call(true, response.statusCode, saveMessage);
       } else {
         final responseJson = jsonDecode(response.body);
         saveMessage = responseJson['message'] ?? 'Gagal menyimpan';
-        onSaveComplete?.call(false, response.statusCode, saveMessage); // Return status code error
+        onSaveComplete?.call(false, response.statusCode, saveMessage);
       }
     } catch (e) {
       saveMessage = 'Terjadi kesalahan: $e';
-      onSaveComplete?.call(false, 500, saveMessage); // Return status code 500 for error
+      onSaveComplete?.call(false, 500, saveMessage);
+      print("❌ Update Scanned Code Error: $e");
     } finally {
       isSaving = false;
       notifyListeners();
     }
   }
-
-
 }

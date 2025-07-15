@@ -1,7 +1,7 @@
 // import 'package:flutter/material.dart';
 // import 'package:provider/provider.dart';
-// import '../view_models/stock_opname_input_view_model.dart';
-// import '../views/barcode_qr_scan_screen.dart';
+// import '../view_models/stock_opname_detail_view_model.dart';
+// import '../views/barcode_qr_scan_stock_opname_screen.dart';
 //
 // class ScanLocationDialog extends StatelessWidget {
 //   final String noSO; // Tambahkan noSO

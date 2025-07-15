@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-import '../view_models/stock_opname_input_view_model.dart';
+import '../view_models/stock_opname_detail_view_model.dart';
 import '../widgets/loading_skeleton.dart';
 import '../widgets/scan_location_dialog.dart';
 import '../widgets/add_manual_dialog.dart';
-import '../views/barcode_qr_scan_screen.dart';
+import '../views/barcode_qr_scan_stock_opname_screen.dart';
 import 'package:searchfield/searchfield.dart';
 import 'package:flutter_searchable_dropdown/flutter_searchable_dropdown.dart';  // Import package
 
@@ -149,7 +149,7 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
                             style: const TextStyle(fontSize: 14, color: Colors.grey),
                           ),
                           Text(
-                            'Lokasi Label: ${noLabel.labelLocation ?? "Tidak Ada"}',
+                            'Lokasi: ${noLabel.labelLocation ?? "-"}',
                             style: const TextStyle(fontSize: 14, color: Colors.blueAccent),
                           ),
                           const Divider(),

@@ -10,7 +10,7 @@ import 'dart:math';
 import 'package:crypto/crypto.dart'; // Untuk validasi file
 
 class UpdateViewModel {
-  static const String _sharePath = "RU New/wps_tablet_mobile/update_mobile";
+  static const String _sharePath = "ru/wps_tablet_mobile/update_mobile";
 
   Future<UpdateInfo?> checkForUpdate() async {
     SmbConnect? connect;

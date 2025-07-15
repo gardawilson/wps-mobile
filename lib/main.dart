@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'views/login_screen.dart';
-import 'views/no_stock_opname_list_screen.dart'; // Import DashboardScreen
+import 'views/stock_opname_list_screen.dart'; // Import DashboardScreen
 import 'views/mapping_lokasi_screen.dart'; // Import DashboardScreen
+import 'views/nyangkut_menu_screen.dart'; // Import DashboardScreen
 import 'views/home_screen.dart';  // Pastikan path sesuai dengan file Anda
-import 'view_models/stock_opname_view_model.dart'; // Import StockOpnameViewModel
-import 'view_models/stock_opname_input_view_model.dart'; // Import StockOpnameInputViewModel
+import 'view_models/stock_opname_list_view_model.dart'; // Import StockOpnameViewModel
+import 'view_models/stock_opname_detail_view_model.dart'; // Import StockOpnameInputViewModel
 import 'view_models/preview_label_view_model.dart'; // Import LabelViewModel
 import 'view_models/pdf_view_model.dart'; // Import PDFViewModel yang diperlukan
 import 'view_models/pdf_view_model_st.dart'; // Import PDFViewModel yang diperlukan
 import 'view_models/user_profile_view_model.dart'; // Import UserProfileViewModel
 import 'view_models/mapping_lokasi_view_model.dart'; // Import UserProfileViewModel
+import 'view_models/nyangkut_list_view_model.dart'; // Import UserProfileViewModel
+import 'view_models/nyangkut_detail_view_model.dart'; // Import UserProfileViewModel
+import 'view_models/lokasi_view_model.dart'; // Import UserProfileViewModel
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 
@@ -31,7 +35,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => PDFViewModelST()), // Menambahkan PDFViewModel yang diperlukan
         ChangeNotifierProvider(create: (_) => UserProfileViewModel()), // Menambahkan UserProfileViewModel
         ChangeNotifierProvider(create: (_) => MappingLokasiViewModel()),
-
+        ChangeNotifierProvider(create: (_) => NyangkutListViewModel()),
+        ChangeNotifierProvider(create: (_) => NyangkutDetailViewModel()),
+        ChangeNotifierProvider(create: (_) => LokasiViewModel()),
       ],
       child: MaterialApp(
         title: 'WPS Mobile',
@@ -42,8 +48,9 @@ class MyApp extends StatelessWidget {
         routes: {
           '/': (context) => LoginScreen(),
           '/home': (context) => HomeScreen(),
-          '/dashboard': (context) => StockOpnameListScreen(),
+          '/stockopname': (context) => StockOpnameListScreen(),
           '/mapping': (context) => MappingLokasiScreen(),
+          '/nyangkut': (context) => NyangkutMenuScreen(),
         },
       ),
     );

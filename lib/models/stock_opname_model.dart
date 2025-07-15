@@ -1,5 +1,3 @@
-// models/stock_opname.dart
-
 class StockOpname {
   final String noSO;
   final String tgl;

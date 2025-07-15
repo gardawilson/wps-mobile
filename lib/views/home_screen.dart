@@ -373,19 +373,19 @@ class HomeScreen extends StatelessWidget {
         _buildMenuCard(
           context,
           title: 'Stock Opname',
-          subtitle: 'Kelola inventaris dan aset',
+          subtitle: 'Kelola stok kayu',
           icon: Icons.checklist_rtl_rounded,
           color: const Color(0xFF755330),
           onTap: () {
-            Navigator.pushNamed(context, '/dashboard');
+            Navigator.pushNamed(context, '/stockopname');
           },
         ),
         const SizedBox(height: 12),
         _buildMenuCard(
           context,
           title: 'Mapping',
-          subtitle: 'Lihat status pekerjaan',
-          icon: Icons.list_alt,
+          subtitle: 'Kelola posisi kayu',
+          icon: Icons.location_on,
           color: const Color(0xFF755330),
           onTap: () {
             Navigator.pushNamed(context, '/mapping');
@@ -394,9 +394,20 @@ class HomeScreen extends StatelessWidget {
         const SizedBox(height: 12),
         _buildMenuCard(
           context,
+          title: 'Nyangkut',
+          subtitle: 'Cek label yang tersangkut',
+          icon: Icons.pending_actions,
+          color: const Color(0xFF755330),
+          onTap: () {
+            Navigator.pushNamed(context, '/nyangkut');
+            },
+        ),
+        const SizedBox(height: 12),
+        _buildMenuCard(
+          context,
           title: 'Akun',
-          subtitle: 'Lihat status pekerjaan',
-          icon: Icons.list_alt,
+          subtitle: 'Kelola password akun',
+          icon: Icons.person,
           color: const Color(0xFF755330),
           onTap: () {
             _showChangePasswordDialog(context);          },

@@ -4,28 +4,25 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
-import '../view_models/stock_opname_input_view_model.dart';
+import '../view_models/nyangkut_detail_view_model.dart';
 import 'package:flutter/foundation.dart';
 import '../widgets/not_found_dialog.dart'; // Import widget NotFoundDialog
 import 'package:vibration/vibration.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 
-
-
-class BarcodeQrScanScreen extends StatefulWidget {
-  final String noSO;
+class BarcodeQrScanNyangkutScreen extends StatefulWidget {
+  final String noNyangkut;
   final String selectedFilter;
-  final String idLokasi;
 
 
-  const BarcodeQrScanScreen({Key? key, required this.noSO, required this.selectedFilter, required this.idLokasi}) : super(key: key);
+  const BarcodeQrScanNyangkutScreen({Key? key, required this.noNyangkut, required this.selectedFilter}) : super(key: key);
 
   @override
-  _BarcodeQrScanScreenState createState() => _BarcodeQrScanScreenState();
+  _BarcodeQrScanNyangkutScreenState createState() => _BarcodeQrScanNyangkutScreenState();
 }
 
-class _BarcodeQrScanScreenState extends State<BarcodeQrScanScreen> with SingleTickerProviderStateMixin {
+class _BarcodeQrScanNyangkutScreenState extends State<BarcodeQrScanNyangkutScreen> with SingleTickerProviderStateMixin {
   final MobileScannerController cameraController = MobileScannerController();
   String? _scanResult;
   bool isFlashOn = false;
@@ -85,104 +82,41 @@ class _BarcodeQrScanScreenState extends State<BarcodeQrScanScreen> with SingleTi
     super.dispose();
   }
 
-  void _processScanResult(String rawValue) async  {
-    if (rawValue != _lastScannedCode) { // Hanya proses jika kode berbeda
-      _lastScannedCode = rawValue; // Update kode terakhir
-      final viewModel = Provider.of<StockOpnameInputViewModel>(context, listen: false);
-      viewModel.processScannedCode(
-        rawValue,
-        widget.idLokasi,
-        widget.noSO,
-        onSaveComplete: (success, statusCode, message) {
+  void _processScanResult(String rawValue) async {
+    if (rawValue != _lastScannedCode) {
+      _lastScannedCode = rawValue;
 
-          if (statusCode == 404 || statusCode == 409) {
-            // Menangani statusCode 404 atau 409 dengan dialog konfirmasi
-            showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return NotFoundDialog(
-                  message: message, // Pesan error dari API
-                  onConfirm: () {
-                    // Lanjutkan pemrosesan jika user pilih "Ya"
-                    viewModel.processScannedCode(
-                      rawValue,
-                      widget.idLokasi,
-                      widget.noSO,
-                      onSaveComplete: (success, statusCode, message) {
+      final viewModel = Provider.of<NyangkutDetailViewModel>(context, listen: false);
+      setState(() {
+        _isSaving = true;
+      });
 
-                        setState(() {
-                          _isSaving = false;
-                          _saveMessage = '$message\nLabel : $rawValue'; // Gabungkan pesan dan hasil scan
-                        });
+      viewModel.processScannedLabel(
+        nonyangkut: widget.noNyangkut, // atau widget.noNyangkut jika berbeda
+        label: rawValue,
+        onResult: (success, statusCode, message) {
+          setState(() {
+            _isSaving = false;
+            _saveMessage = '$message\nLabel : $rawValue';
+          });
 
-                        if (success) {
-                          final viewModel = Provider.of<StockOpnameInputViewModel>(context, listen: false);
-                          viewModel.fetchData(
-                              widget.noSO,
-                              filterBy: widget.selectedFilter,
-                              idLokasi: widget.idLokasi
-                          );
-
-                          // Hapus pesan setelah beberapa detik
-                          Future.delayed(const Duration(seconds: 3), () {
-                            setState(() {
-                              _saveMessage = '';
-                            });
-                            _lastScannedCode = null; // Reset setelah pesan hilang
-                          });
-
-                        } else {
-                          // Hapus pesan setelah beberapa detik
-                          Future.delayed(const Duration(seconds: 3), () {
-                            setState(() {
-                              _saveMessage = '';
-                            });
-                            _lastScannedCode = null; // Reset setelah pesan hilang
-                          });
-                        }
-                      },
-                      forceSave: true, // Flag untuk memaksa penyimpanan meskipun data tidak ada
-                    );
-                  },
-                );
-              },
-            );
+          // Mainkan suara dan getaran
+          if (success) {
+            _audioPlayer.setPlaybackRate(2.0);
+            _audioPlayer.play(AssetSource('sounds/accepted.mp3'));
           } else {
-            print("Masuk ke kondisi else, memulai getaran");
-
-            if (statusCode == 201 || statusCode == 200) {
-              // Memutar suara accepted.mp3 dengan kecepatan 2x
-              _audioPlayer.setPlaybackRate(2.0); // Kecepatan 2x
-              _audioPlayer.play(AssetSource('sounds/accepted.mp3'));
-            } else {
-              // Memutar suara denied.mp3 dengan kecepatan 2x
-              _audioPlayer.setPlaybackRate(2.0); // Kecepatan 2x
-              _audioPlayer.play(AssetSource('sounds/denied.mp3'));
-              Vibration.vibrate(duration: 1000);
-
-            }
-
-            final viewModel = Provider.of<StockOpnameInputViewModel>(
-                context, listen: false);
-            viewModel.fetchData(
-                widget.noSO,
-                filterBy: widget.selectedFilter,
-                idLokasi: widget.idLokasi
-            );
-
-            setState(() {
-              _isSaving = false;
-              _saveMessage = '$message\nLabel : $rawValue'; // Gabungkan pesan dan hasil scan
-            });
-
-            // Hapus pesan setelah beberapa detik
-            Future.delayed(const Duration(seconds: 3), () {
-              setState(() {
-                _saveMessage = '';
-              });
-              _lastScannedCode = null; // Reset setelah pesan hilang
-            });
+            _audioPlayer.setPlaybackRate(2.0);
+            _audioPlayer.play(AssetSource('sounds/denied.mp3'));
+            Vibration.vibrate(duration: 1000);
           }
+
+          // Reset pesan dan _lastScannedCode
+          Future.delayed(const Duration(seconds: 3), () {
+            setState(() {
+              _saveMessage = '';
+            });
+            _lastScannedCode = null;
+          });
         },
       );
     } else {
@@ -196,36 +130,36 @@ class _BarcodeQrScanScreenState extends State<BarcodeQrScanScreen> with SingleTi
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final scanAreaSize = screenWidth * 0.6;
-    final count = Provider.of<StockOpnameInputViewModel>(context).totalData;
+    final count = Provider.of<NyangkutDetailViewModel>(context).totalData;
 
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-        appBar: AppBar(
-          title: Text(
-            'Lokasi ${widget.idLokasi} | ${count} Label',
-            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-          ),
-          backgroundColor: Colors.white, // Set background color to white
-          elevation: 0,
-          iconTheme: const IconThemeData(color: Colors.black), // Set icon color to black
-          actions: [
-            IconButton(
-              icon: Icon(
-                isFlashOn ? Icons.flash_off : Icons.flash_on,
-                color: Colors.black, // Set the icon color to black
-              ),
-              onPressed: () async {
-                setState(() {
-                  isFlashOn = !isFlashOn;
-                });
-
-                // Toggle torch (flashlight)
-                cameraController.toggleTorch();
-              },
-            ),
-          ],
+      appBar: AppBar(
+        title: Text(
+          '${widget.selectedFilter.toUpperCase()} | ${count} Label',
+          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
+        backgroundColor: Colors.white, // Set background color to white
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black), // Set icon color to black
+        actions: [
+          IconButton(
+            icon: Icon(
+              isFlashOn ? Icons.flash_off : Icons.flash_on,
+              color: Colors.black, // Set the icon color to black
+            ),
+            onPressed: () async {
+              setState(() {
+                isFlashOn = !isFlashOn;
+              });
+
+              // Toggle torch (flashlight)
+              cameraController.toggleTorch();
+            },
+          ),
+        ],
+      ),
       body: Stack(
         children: [
           if (hasCameraPermission)
@@ -303,7 +237,7 @@ class _BarcodeQrScanScreenState extends State<BarcodeQrScanScreen> with SingleTi
                 padding: const EdgeInsets.all(8),
                 margin: const EdgeInsets.symmetric(horizontal: 20), // Tambahkan margin horizontal
                 decoration: BoxDecoration(
-                  color: _saveMessage.startsWith('Data berhasil') ? Colors.green : Colors.red,
+                  color: _saveMessage.contains('berhasil') ? Colors.green : Colors.red,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -325,7 +259,7 @@ class _BarcodeQrScanScreenState extends State<BarcodeQrScanScreen> with SingleTi
               child: Center(
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
-                  child: _saveMessage.startsWith('Data berhasil')
+                  child: _saveMessage.contains('berhasil')
                       ? Image.asset(
                     'assets/images/check.png', // Path ke check.png
                     key: const ValueKey('check'),

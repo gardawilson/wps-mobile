@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../view_models/stock_opname_input_view_model.dart';
+import '../view_models/stock_opname_detail_view_model.dart';
 import 'not_found_dialog.dart'; // Import widget NotFoundDialog
 import 'print_confirmation_dialog.dart';
 

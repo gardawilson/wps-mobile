@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
-import '../view_models/stock_opname_view_model.dart';
-import 'stock_opname_input_screen.dart';
+import '../view_models/stock_opname_list_view_model.dart';
+import 'stock_opname_detail_screen.dart';
 
 class StockOpnameListScreen extends StatelessWidget {
   @override

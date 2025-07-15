@@ -1,4 +1,4 @@
-// models/stock_opname_input_model.dart
+// models/stock_opname_detail_model.dart
 
 class StockOpnameInputModel {
   final String idLokasi;

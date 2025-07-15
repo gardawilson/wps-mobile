@@ -21,11 +21,7 @@ class LoadingSkeleton extends StatelessWidget {
             _buildSkeletonItem(),
             _buildSkeletonItem(),
             _buildSkeletonItem(),
-            _buildSkeletonItem(),
-            _buildSkeletonItem(),
-            _buildSkeletonItem(),
-            _buildSkeletonItem(),
-            _buildSkeletonItem(),
+
           ],
         ),
       ),
