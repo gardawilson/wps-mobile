@@ -9,7 +9,12 @@ class ApiConstants {
   static String get saveChanges => '$baseUrl/api/label-list/save-changes';
   static String get listNoSO => '$baseUrl/api/no-stock-opname';
   static String get listNyangkut => '$baseUrl/api/nyangkut-list';
+  static String get listNoKD => '$baseUrl/api/kd-bongkar';
   static String get mstLokasi => '$baseUrl/api/mst-lokasi';
+
+  static String get checkKdBongkar => '$baseUrl/api/kd-bongkar/check';
+  static String get updateKdBongkar => '$baseUrl/api/kd-bongkar/scan';
+
 
 
   static String scanLabel(String noSO) => '$baseUrl/api/no-stock-opname/$noSO/scan';
