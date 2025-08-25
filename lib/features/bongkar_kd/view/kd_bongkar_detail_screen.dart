@@ -12,8 +12,9 @@ import 'barcode_qr_scan_kd_bongkar_screen.dart';
 class KDBongkarDetailScreen extends StatefulWidget {
   final String noProcKD;
   final String tgl;
+  final String tglKeluar;
 
-  const KDBongkarDetailScreen({Key? key, required this.noProcKD, required this.tgl}) : super(key: key);
+  const KDBongkarDetailScreen({Key? key, required this.noProcKD, required this.tgl, required this.tglKeluar}) : super(key: key);
 
   @override
   State<KDBongkarDetailScreen> createState() => _KDBongkarDetailScreenState();
@@ -484,11 +485,24 @@ class _KDBongkarDetailScreenState extends State<KDBongkarDetailScreen>
           labelStyle: const TextStyle(fontWeight: FontWeight.w600),
           backgroundColor: Colors.white,
           foregroundColor: const Color(0xFF755330),
-          onTap: () => _showScanBarQRCode(context),
+          onTap: () {
+            if (widget.tglKeluar != '-') {
+              _showScanBarQRCode(context);
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Belum keluar KD!'),
+                  backgroundColor: Colors.red,
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+          },
         ),
       ],
     );
   }
+
 
   void _showScanBarQRCode(BuildContext context) {
     if (_selectedLocation == null || _selectedLocation!.toLowerCase().contains('semua')) {

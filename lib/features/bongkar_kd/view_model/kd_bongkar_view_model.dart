@@ -19,8 +19,8 @@ class KDBongkarViewModel extends ChangeNotifier {
     return prefs.getString('token');
   }
 
-  Future<void> fetchKDBongkarList() async {
-    print("🔄 [KDBongkarViewModel] fetchKDBongkarList dipanggil");
+  Future<void> fetchKDBongkarList({required bool isPending}) async {
+    print("🔄 [KDBongkarViewModel] fetchKDBongkarList dipanggil (isPending=$isPending)");
 
     _isLoading = true;
     notifyListeners();
@@ -36,8 +36,12 @@ class KDBongkarViewModel extends ChangeNotifier {
         return;
       }
 
+      final uri = Uri.parse("${ApiConstants.listNoKD}?isPending=$isPending");
+
+      print("🌐 Request ke: $uri");
+
       final response = await http.get(
-        Uri.parse(ApiConstants.listNoKD),
+        uri,
         headers: {
           'Authorization': 'Bearer $token',
         },
@@ -48,7 +52,8 @@ class KDBongkarViewModel extends ChangeNotifier {
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
-        _kdBongkarList = data.map((item) => KDBongkarModel.fromJson(item)).toList();
+        _kdBongkarList =
+            data.map((item) => KDBongkarModel.fromJson(item)).toList();
         _errorMessage = '';
         print("✅ Berhasil memuat ${_kdBongkarList.length} data.");
       } else {
@@ -67,5 +72,6 @@ class KDBongkarViewModel extends ChangeNotifier {
       print("🏁 Selesai fetchKDBongkarList");
     }
   }
+
 
 }

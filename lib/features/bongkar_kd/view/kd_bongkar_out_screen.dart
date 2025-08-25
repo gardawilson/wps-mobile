@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:wps_mobile/features/bongkar_kd/view/kd_bongkar_detail_screen.dart';
 import '../view_model/kd_bongkar_view_model.dart';
 import '../../../core/widgets/loading_skeleton.dart';
 
 
-class KDBongkarScreen extends StatelessWidget {
+class KdBongkarOutScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<KDBongkarViewModel>(context, listen: false)
-          .fetchKDBongkarList();
+          .fetchKDBongkarList(isPending: false);
     });
 
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Nomor KD',
+          'KD Out',
           style: TextStyle(color: Colors.white),
         ),        backgroundColor: const Color(0xFF755330),
       ),
@@ -39,7 +38,7 @@ class KDBongkarScreen extends StatelessWidget {
                   const SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: () {
-                      viewModel.fetchKDBongkarList();
+                      viewModel.fetchKDBongkarList(isPending: false);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF755330),
@@ -67,7 +66,7 @@ class KDBongkarScreen extends StatelessWidget {
                   const SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: () {
-                      viewModel.fetchKDBongkarList();
+                      viewModel.fetchKDBongkarList(isPending: false);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF755330),
@@ -85,7 +84,7 @@ class KDBongkarScreen extends StatelessWidget {
 
           return RefreshIndicator(
             onRefresh: () async {
-              await viewModel.fetchKDBongkarList();
+              await viewModel.fetchKDBongkarList(isPending: false);
             },
             child: ListView.separated(
               padding: const EdgeInsets.all(10),
@@ -108,6 +107,7 @@ class KDBongkarScreen extends StatelessWidget {
                           builder: (context) => KDBongkarDetailScreen(
                             noProcKD: bongkarKD.noProcKD,
                             tgl: bongkarKD.tglMasuk,
+                            tglKeluar: bongkarKD.tglKeluar.toString(),
                           ),
                         ),
                       );

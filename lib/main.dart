@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wps_mobile/features/bongkar_kd/view/kd_bongkar_screen.dart';
+import 'package:wps_mobile/features/bongkar_kd/view/kd_bongkar_pending_screen.dart';
+import 'package:wps_mobile/features/bongkar_kd/view/kd_bongkar_selected_screen.dart';
 import 'package:wps_mobile/features/bongkar_kd/view_model/kd_bongkar_detail_view_model.dart';
 import 'features/login/view/login_screen.dart';
 import 'features/stock_opname/view/stock_opname_list_screen.dart'; // Import DashboardScreen
@@ -56,7 +57,7 @@ class MyApp extends StatelessWidget {
           '/stockopname': (context) => StockOpnameListScreen(),
           '/mapping': (context) => MappingLokasiScreen(),
           '/nyangkut': (context) => NyangkutMenuScreen(),
-          '/bongkarkd': (context) => KDBongkarScreen(),
+          '/bongkarkd': (context) => KdBongkarSelectedScreen(),
         },
       ),
     );
