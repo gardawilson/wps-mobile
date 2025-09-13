@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shimmer/shimmer.dart';
-import 'package:wps_mobile/features/bongkar_kd/view/kd_bongkar_detail_screen.dart';
+import 'kd_bongkar_in_detail_screen.dart';
 import '../view_model/kd_bongkar_view_model.dart';
 import '../../../core/widgets/loading_skeleton.dart';
 
 
-class KdBongkarPendingScreen extends StatelessWidget {
+class KdBongkarInScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -17,7 +16,7 @@ class KdBongkarPendingScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'KD Pending',
+          'KD In',
           style: TextStyle(color: Colors.white),
         ),        backgroundColor: const Color(0xFF755330),
       ),
@@ -105,7 +104,7 @@ class KdBongkarPendingScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => KDBongkarDetailScreen(
+                          builder: (context) => KDBongkarInDetailScreen(
                             noProcKD: bongkarKD.noProcKD,
                             tgl: bongkarKD.tglMasuk,
                             tglKeluar: bongkarKD.tglKeluar.toString(),

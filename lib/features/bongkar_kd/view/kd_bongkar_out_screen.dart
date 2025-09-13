@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wps_mobile/features/bongkar_kd/view/kd_bongkar_detail_screen.dart';
+import 'kd_bongkar_out_detail_screen.dart';
 import '../view_model/kd_bongkar_view_model.dart';
 import '../../../core/widgets/loading_skeleton.dart';
 
@@ -104,7 +104,7 @@ class KdBongkarOutScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => KDBongkarDetailScreen(
+                          builder: (context) => KDBongkarOutDetailScreen(
                             noProcKD: bongkarKD.noProcKD,
                             tgl: bongkarKD.tglMasuk,
                             tglKeluar: bongkarKD.tglKeluar.toString(),

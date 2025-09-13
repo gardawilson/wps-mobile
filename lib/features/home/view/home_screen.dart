@@ -199,6 +199,17 @@ class HomeScreen extends StatelessWidget {
         const SizedBox(height: 12),
         _buildMenuCard(
           context,
+          title: 'Kayu Bulat',
+          subtitle: 'Cek label yang tersangkut',
+          icon: Icons.inventory_2_sharp,
+          color: const Color(0xFF755330),
+          onTap: () {
+            Navigator.pushNamed(context, '/nyangkut');
+          },
+        ),
+        const SizedBox(height: 12),
+        _buildMenuCard(
+          context,
           title: 'Akun',
           subtitle: 'Kelola password akun',
           icon: Icons.person,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:wps_mobile/features/bongkar_kd/view/kd_bongkar_out_screen.dart';
-import 'kd_bongkar_pending_screen.dart';
+import 'kd_bongkar_out_screen.dart';
+import 'kd_bongkar_in_screen.dart';
 
 class KdBongkarSelectedScreen extends StatelessWidget {
   const KdBongkarSelectedScreen({super.key});
@@ -50,32 +50,31 @@ class KdBongkarSelectedScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:
-        const Text('Bongkar KD', style: TextStyle(color: Colors.white)),
+        title: const Text('Bongkar KD', style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF755330),
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 30),
         children: [
           _buildModeCard(
-            icon: Icons.checklist_rounded,
-            title: 'KD Sudah Keluar',
+            icon: Icons.login,
+            title: 'KD IN',
+            description: 'Lihat daftar nomor KD yang belum keluar.',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => KdBongkarInScreen()),
+              );
+            },
+          ),
+          _buildModeCard(
+            icon: Icons.logout,
+            title: 'KD OUT',
             description: 'Lihat daftar nomor KD yang sudah keluar.',
             onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => KdBongkarOutScreen()),
-              );
-            },
-          ),
-          _buildModeCard(
-            icon: Icons.pending_actions_rounded,
-            title: 'KD Belum Keluar',
-            description: 'Lihat daftar nomor KD yang belum keluar.',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => KdBongkarPendingScreen()),
               );
             },
           ),

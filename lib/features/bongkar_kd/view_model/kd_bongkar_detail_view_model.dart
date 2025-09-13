@@ -11,24 +11,43 @@ class KDBongkarDetailViewModel extends ChangeNotifier {
   // ===== BEFORE =====
   List<KDBongkarDetailBeforeModel> _beforeList = [];
   int _totalBefore = 0;
+  String _totalM3Before = '0.0000';
+  int _totalJumlahBefore = 0;
 
   // ===== AFTER =====
   List<KDBongkarDetailAfterModel> _afterList = [];
   int _totalAfter = 0;
+  String _totalM3After = '0.0000';
+  int _totalJumlahAfter = 0;
 
   // ===== COMMON STATE =====
   bool _isLoading = false;
   String _errorMessage = '';
 
-  // Getter
+  // Getter BEFORE
   List<KDBongkarDetailBeforeModel> get beforeList => _beforeList;
   int get totalBefore => _totalBefore;
+  String get totalM3Before => _totalM3Before;
+  int get totalJumlahBefore => _totalJumlahBefore;
 
+  // Getter AFTER
   List<KDBongkarDetailAfterModel> get afterList => _afterList;
   int get totalAfter => _totalAfter;
+  String get totalM3After => _totalM3After;
+  int get totalJumlahAfter => _totalJumlahAfter;
 
+  // Getter COMMON
   bool get isLoading => _isLoading;
   String get errorMessage => _errorMessage;
+
+  // Helper getter untuk total gabungan
+  String get totalM3Combined {
+    double beforeValue = double.tryParse(_totalM3Before) ?? 0.0;
+    double afterValue = double.tryParse(_totalM3After) ?? 0.0;
+    return (beforeValue + afterValue).toStringAsFixed(4);
+  }
+
+  int get totalJumlahCombined => _totalJumlahBefore + _totalJumlahAfter;
 
   // Ambil token
   Future<String?> _getToken() async {
@@ -47,6 +66,8 @@ class KDBongkarDetailViewModel extends ChangeNotifier {
         _errorMessage = 'Token tidak ditemukan.';
         _beforeList = [];
         _totalBefore = 0;
+        _totalM3Before = '0.0000';
+        _totalJumlahBefore = 0;
         return;
       }
 
@@ -65,17 +86,27 @@ class KDBongkarDetailViewModel extends ChangeNotifier {
             .toList();
 
         _totalBefore = data['totalLabel'] ?? 0;
+
+        // Ambil summary data
+        final summary = data['summary'];
+        _totalM3Before = summary?['totalM3'] ?? '0.0000';
+        _totalJumlahBefore = summary?['totalJumlah'] ?? 0;
+
         _errorMessage = '';
       } else {
         final responseBody = json.decode(response.body);
         _errorMessage = responseBody['message'] ?? 'Gagal mengambil data BEFORE.';
         _beforeList = [];
         _totalBefore = 0;
+        _totalM3Before = '0.0000';
+        _totalJumlahBefore = 0;
       }
     } catch (e) {
       _errorMessage = 'Gagal terhubung ke server (BEFORE).';
       _beforeList = [];
       _totalBefore = 0;
+      _totalM3Before = '0.0000';
+      _totalJumlahBefore = 0;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -93,6 +124,8 @@ class KDBongkarDetailViewModel extends ChangeNotifier {
         _errorMessage = 'Token tidak ditemukan.';
         _afterList = [];
         _totalAfter = 0;
+        _totalM3After = '0.0000';
+        _totalJumlahAfter = 0;
         return;
       }
 
@@ -111,17 +144,27 @@ class KDBongkarDetailViewModel extends ChangeNotifier {
             .toList();
 
         _totalAfter = data['totalLabel'] ?? 0;
+
+        // Ambil summary data
+        final summary = data['summary'];
+        _totalM3After = summary?['totalM3'] ?? '0.0000';
+        _totalJumlahAfter = summary?['totalJumlah'] ?? 0;
+
         _errorMessage = '';
       } else {
         final responseBody = json.decode(response.body);
         _errorMessage = responseBody['message'] ?? 'Gagal mengambil data AFTER.';
         _afterList = [];
         _totalAfter = 0;
+        _totalM3After = '0.0000';
+        _totalJumlahAfter = 0;
       }
     } catch (e) {
       _errorMessage = 'Gagal terhubung ke server (AFTER).';
       _afterList = [];
       _totalAfter = 0;
+      _totalM3After = '0.0000';
+      _totalJumlahAfter = 0;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -139,6 +182,29 @@ class KDBongkarDetailViewModel extends ChangeNotifier {
     ]);
 
     _isLoading = false;
+    notifyListeners();
+  }
+
+  // Helper methods untuk UI
+  bool hasDetailsInBefore() {
+    return _beforeList.any((item) => item.details != null && item.details!.isNotEmpty);
+  }
+
+  bool hasDetailsInAfter() {
+    return _afterList.any((item) => item.details != null && item.details!.isNotEmpty);
+  }
+
+  // Method untuk clear data
+  void clearData() {
+    _beforeList.clear();
+    _afterList.clear();
+    _totalBefore = 0;
+    _totalAfter = 0;
+    _totalM3Before = '0.0000';
+    _totalJumlahBefore = 0;
+    _totalM3After = '0.0000';
+    _totalJumlahAfter = 0;
+    _errorMessage = '';
     notifyListeners();
   }
 }
