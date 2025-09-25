@@ -53,6 +53,12 @@ dependencies:
   flutter_dotenv: ^5.2.1
   fl_chart: ^0.65.0
   flutter_riverpod: ^2.6.1
+  video_player: ^2.8.2
+  image_picker: ^1.0.7
+  file_picker: ^10.3.3
+  url_launcher: ^6.3.0
+  dio: ^5.7.0
+
 
 
   # The following adds the Cupertino Icons font to your application.

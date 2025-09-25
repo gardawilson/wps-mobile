@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:wps_mobile/features/bongkar_kd/view/kd_bongkar_in_screen.dart';
 import 'package:wps_mobile/features/bongkar_kd/view/kd_bongkar_selected_screen.dart';
 import 'package:wps_mobile/features/bongkar_kd/view_model/kd_bongkar_detail_view_model.dart';
+import 'package:wps_mobile/features/kayu_bulat/view/kayu_bulat_screen.dart';
+import 'package:wps_mobile/features/kayu_bulat/view_model/kayu_bulat_attachment_view_model.dart';
+import 'package:wps_mobile/features/kayu_bulat/view_model/kayu_bulat_view_model.dart';
 import 'features/login/view/login_screen.dart';
 import 'features/stock_opname/view/stock_opname_list_screen.dart'; // Import DashboardScreen
 import 'features/mapping/view/mapping_lokasi_screen.dart'; // Import DashboardScreen
@@ -44,6 +47,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LokasiViewModel()),
         ChangeNotifierProvider(create: (_) => KDBongkarViewModel()),
         ChangeNotifierProvider(create: (_) => KDBongkarDetailViewModel()),
+        ChangeNotifierProvider(create: (_) => KayuBulatViewModel()),
+        ChangeNotifierProvider(create: (_) => KayuBulatAttachmentViewModel()),
       ],
       child: MaterialApp(
         title: 'WPS Mobile',
@@ -58,6 +63,7 @@ class MyApp extends StatelessWidget {
           '/mapping': (context) => MappingLokasiScreen(),
           '/nyangkut': (context) => NyangkutMenuScreen(),
           '/bongkarkd': (context) => KdBongkarSelectedScreen(),
+          '/kayu-bulat': (context) => KayuBulatScreen(),
         },
       ),
     );

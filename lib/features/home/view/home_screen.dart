@@ -204,7 +204,7 @@ class HomeScreen extends StatelessWidget {
           icon: Icons.inventory_2_sharp,
           color: const Color(0xFF755330),
           onTap: () {
-            Navigator.pushNamed(context, '/nyangkut');
+            Navigator.pushNamed(context, '/kayu-bulat');
           },
         ),
         const SizedBox(height: 12),
