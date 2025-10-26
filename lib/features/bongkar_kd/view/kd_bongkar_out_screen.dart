@@ -1,191 +1,135 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import 'kd_bongkar_out_detail_screen.dart';
 import '../view_model/kd_bongkar_view_model.dart';
 import '../../../core/widgets/loading_skeleton.dart';
 
+// ⬇️ reusable card
+import '../../../core/widgets/app_info_card.dart';
 
 class KdBongkarOutScreen extends StatelessWidget {
+  const KdBongkarOutScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
+    // initial fetch
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<KDBongkarViewModel>(context, listen: false)
           .fetchKDBongkarList(isPending: false);
     });
 
+    const brandColor = Color(0xFF755330);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'KD Out',
-          style: TextStyle(color: Colors.white),
-        ),        backgroundColor: const Color(0xFF755330),
+        title: const Text('KD Out', style: TextStyle(color: Colors.white)),
+        backgroundColor: brandColor,
       ),
       body: Consumer<KDBongkarViewModel>(
-        builder: (context, viewModel, child) {
-          if (viewModel.isLoading && viewModel.kdBongkarList.isEmpty) {
+        builder: (context, vm, _) {
+          if (vm.isLoading && vm.kdBongkarList.isEmpty) {
             return const LoadingSkeleton();
           }
 
-          if (viewModel.kdBongkarList.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    viewModel.errorMessage,
-                    style: const TextStyle(color: Colors.grey, fontSize: 16),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: () {
-                      viewModel.fetchKDBongkarList(isPending: false);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF755330),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
+          if (vm.kdBongkarList.isEmpty) {
+            return _EmptyOrError(
+              message: vm.errorMessage.isEmpty ? 'Tidak ada data' : vm.errorMessage,
+              onRetry: () => vm.fetchKDBongkarList(isPending: false),
             );
           }
 
-          if (viewModel.errorMessage.isNotEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    viewModel.errorMessage,
-                    style: const TextStyle(color: Colors.grey, fontSize: 16),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: () {
-                      viewModel.fetchKDBongkarList(isPending: false);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF755330),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
+          if (vm.errorMessage.isNotEmpty) {
+            return _EmptyOrError(
+              message: vm.errorMessage,
+              onRetry: () => vm.fetchKDBongkarList(isPending: false),
             );
           }
 
           return RefreshIndicator(
-            onRefresh: () async {
-              await viewModel.fetchKDBongkarList(isPending: false);
-            },
+            onRefresh: () => vm.fetchKDBongkarList(isPending: false),
             child: ListView.separated(
-              padding: const EdgeInsets.all(10),
-              itemCount: viewModel.kdBongkarList.length,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              itemCount: vm.kdBongkarList.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
-                final bongkarKD = viewModel.kdBongkarList[index];
+                final it = vm.kdBongkarList[index];
 
-                return Card(
-                  elevation: 4,
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => KDBongkarOutDetailScreen(
-                            noProcKD: bongkarKD.noProcKD,
-                            tgl: bongkarKD.tglMasuk,
-                            tglKeluar: bongkarKD.tglKeluar.toString(),
-                          ),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFDFBF8),
-                        border: Border(
-                          left: BorderSide(color: Colors.brown.shade300, width: 4),
-                        ),
-                      ),
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            bongkarKD.noProcKD,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF4B322A),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'No. KD: ${bongkarKD.noRuangKD}',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-
-                          // 👉 Tanggal Masuk dengan icon
-                          Row(
-                            children: [
-                              const Icon(Icons.login, size: 16, color: Colors.brown),
-                              const SizedBox(width: 6),
-                              Text(
-                                'Masuk: ${bongkarKD.tglMasuk}',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-
-                          // 👉 Tanggal Keluar dengan icon
-                          Row(
-                            children: [
-                              const Icon(Icons.logout, size: 16, color: Colors.green),
-                              const SizedBox(width: 6),
-                              Text(
-                                'Keluar: ${bongkarKD.tglKeluar}',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-
+                // Mapping ke AppInfoCard
+                return AppInfoCard(
+                  title: it.noProcKD,                     // judul besar
+                  brandColor: brandColor,
+                  leadingIcon: Icons.assignment_outlined,
+                  rows: [
+                    InfoRowData(
+                      icon: Icons.confirmation_number_outlined,
+                      label: 'No. KD',
+                      value: it.noRuangKD.toString() ?? '-',   // ⬅️ penting
+                      color: Colors.blue.shade700,
                     ),
-                  ),
+                    InfoRowData(
+                      icon: Icons.login,
+                      label: 'Tgl Masuk',
+                      value: '${it.tglMasuk}',
+                      color: Colors.green.shade700,
+                    ),
+                    InfoRowData(
+                      icon: Icons.logout,
+                      label: 'Tgl Keluar',
+                      value: '${it.tglKeluar ?? '-'}',
+                      color: Colors.red.shade700,
+                    ),
+                  ],
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => KDBongkarOutDetailScreen(
+                          noProcKD: it.noProcKD,
+                          tgl: it.tglMasuk,
+                          tglKeluar: it.tglKeluar?.toString() ?? '-',
+                        ),
+                      ),
+                    );
+                  },
+                  onLongPress: () {
+                    // opsional: aksi long-press (hapus/edit, dll)
+                  },
                 );
-
-
               },
-              separatorBuilder: (context, index) => const SizedBox(height: 10),
             ),
           );
         },
       ),
     );
   }
+}
 
+class _EmptyOrError extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+  const _EmptyOrError({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    const brandColor = Color(0xFF755330);
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(message, style: const TextStyle(color: Colors.grey, fontSize: 16)),
+          const SizedBox(height: 10),
+          ElevatedButton(
+            onPressed: onRetry,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: brandColor,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
 }

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wps_mobile/core/utils/date_formatter.dart';
 import '../view_model/kayu_bulat_view_model.dart';
 import '../../../core/widgets/loading_skeleton.dart';
 import 'kayu_bulat_attachment_screen.dart';
+
+// ✅ SESUAIKAN path ini dengan lokasi AppInfoCard kamu
+import '../../../core/widgets/app_info_card.dart'; // berisi AppInfoCard, InfoRowData
 
 class KayuBulatScreen extends StatefulWidget {
   const KayuBulatScreen({super.key});
@@ -12,12 +16,14 @@ class KayuBulatScreen extends StatefulWidget {
 }
 
 class _KayuBulatScreenState extends State<KayuBulatScreen> {
+  static const Color _brand = Color(0xFF755330);
+
   @override
   void initState() {
     super.initState();
     // fetch data pertama kali setelah widget ter-load
-    Future.microtask(() =>
-        Provider.of<KayuBulatViewModel>(context, listen: false).fetchAll()
+    Future.microtask(
+          () => Provider.of<KayuBulatViewModel>(context, listen: false).fetchAll(),
     );
   }
 
@@ -29,7 +35,7 @@ class _KayuBulatScreenState extends State<KayuBulatScreen> {
           "Data Kayu Bulat",
           style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: const Color(0xFF755330),
+        backgroundColor: _brand,
       ),
       body: Consumer<KayuBulatViewModel>(
         builder: (context, vm, child) {
@@ -47,7 +53,7 @@ class _KayuBulatScreenState extends State<KayuBulatScreen> {
                   ElevatedButton(
                     onPressed: () => vm.fetchAll(),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF755330),
+                      backgroundColor: _brand,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -67,52 +73,48 @@ class _KayuBulatScreenState extends State<KayuBulatScreen> {
           return RefreshIndicator(
             onRefresh: () => vm.fetchAll(),
             child: ListView.separated(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               itemCount: vm.list.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 4),
               itemBuilder: (context, index) {
                 final item = vm.list[index];
-                return Card(
-                  elevation: 2,
-                  margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ListTile(
-                    leading: Icon(
-                      Icons.local_florist, // bisa diganti icon kayu/log
+
+                final isApproved = item.approve == 1;
+                final statusText = isApproved ? "Approved" : "Pending";
+                final statusColor = isApproved ? Colors.green : Colors.orange;
+
+                return AppInfoCard(
+                  title: item.noKayuBulat, // judul besar
+                  subtitle: DateFormatter.fullFromYmd(context, item.dateCreate), // bisa ganti pakai formatter kalau mau
+                  leadingIcon: Icons.assignment_outlined, // ikon besar di header
+                  brandColor: _brand,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            KayuBulatAttachmentScreen(noKayuBulat: item.noKayuBulat),
+                      ),
+                    );
+                  },
+                  // contoh long-press (opsional): refresh item list
+                  onLongPress: () => vm.fetchAll(),
+                  rows: [
+                    InfoRowData(
+                      icon: Icons.badge_outlined,
+                      label: "Suket",
+                      value: item.suket,
                       color: Colors.brown.shade400,
                     ),
-                    title: Text(
-                      item.noKayuBulat,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF4B322A),
-                      ),
+                    InfoRowData(
+                      icon: Icons.local_shipping_outlined,
+                      label: "Truk",
+                      value: "${item.noTruk} (${item.noPlat})",
+                      color: Colors.blueGrey,
                     ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("Suket: ${item.suket}"),
-                        Text("Truk: ${item.noTruk} (${item.noPlat})"),
-                        Text("Tanggal masuk: ${item.dateCreate}"),
-                      ],
-                    ),
-                    trailing: Icon(
-                      item.approve == 1 ? Icons.verified : Icons.pending,
-                      color: item.approve == 1 ? Colors.green : Colors.orange,
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => KayuBulatAttachmentScreen(noKayuBulat: item.noKayuBulat),
-                        ),
-                      );
-                    },
-                  ),
+                  ],
                 );
               },
-              separatorBuilder: (_, __) => const SizedBox(height: 5),
             ),
           );
         },

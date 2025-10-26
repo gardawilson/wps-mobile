@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shimmer/shimmer.dart';
+
 import '../view_model/nyangkut_list_view_model.dart';
 import '../view/nyangkut_detail_screen.dart';
 import '../../../core/widgets/loading_skeleton.dart';
 
+// ⬇️ reusable card dan row data
+import '../../../core/widgets/app_info_card.dart';
 
 class NyangkutListScreen extends StatelessWidget {
+  const NyangkutListScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -14,143 +18,101 @@ class NyangkutListScreen extends StatelessWidget {
           .fetchNyangkutList();
     });
 
+    const brandColor = Color(0xFF755330);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Nyangkut List',
-          style: TextStyle(color: Colors.white),
-        ),        backgroundColor: const Color(0xFF755330),
+        title: const Text('Nyangkut List', style: TextStyle(color: Colors.white)),
+        backgroundColor: brandColor,
       ),
       body: Consumer<NyangkutListViewModel>(
-        builder: (context, viewModel, child) {
-          if (viewModel.isLoading && viewModel.nyangkutList.isEmpty) {
+        builder: (context, vm, _) {
+          if (vm.isLoading && vm.nyangkutList.isEmpty) {
             return const LoadingSkeleton();
           }
 
-          if (viewModel.nyangkutList.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    viewModel.errorMessage,
-                    style: const TextStyle(color: Colors.grey, fontSize: 16),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: () {
-                      viewModel.fetchNyangkutList();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF755330),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
+          if (vm.nyangkutList.isEmpty) {
+            return _EmptyOrError(
+              message: vm.errorMessage.isEmpty ? 'Tidak ada data' : vm.errorMessage,
+              onRetry: vm.fetchNyangkutList,
             );
           }
 
-          if (viewModel.errorMessage.isNotEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    viewModel.errorMessage,
-                    style: const TextStyle(color: Colors.grey, fontSize: 16),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: () {
-                      viewModel.fetchNyangkutList();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF755330),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
+          if (vm.errorMessage.isNotEmpty) {
+            return _EmptyOrError(
+              message: vm.errorMessage,
+              onRetry: vm.fetchNyangkutList,
             );
           }
 
           return RefreshIndicator(
-            onRefresh: () async {
-              await viewModel.fetchNyangkutList();
-            },
+            onRefresh: () => vm.fetchNyangkutList(),
             child: ListView.separated(
-              padding: const EdgeInsets.all(10),
-              itemCount: viewModel.nyangkutList.length,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              itemCount: vm.nyangkutList.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
-                final nyangkut = viewModel.nyangkutList[index];
+                final it = vm.nyangkutList[index];
 
-                return Card(
-                  elevation: 4,
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => NyangkutDetailScreen(
-                            noNyangkut: nyangkut.NoNyangkut,
-                            tgl: nyangkut.tgl,
-                          ),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFDFBF8),
-                        border: Border(
-                          left: BorderSide(color: Colors.brown.shade300, width: 4),
+                return AppInfoCard(
+                  title: it.NoNyangkut.toString(),                 // judul besar
+                  subtitle: 'Tanggal: ${it.tgl?.toString() ?? '-'}',
+                  brandColor: brandColor,
+                  leadingIcon: Icons.assignment_outlined,
+                  // Jika butuh baris tambahan, tambahkan di rows
+                  rows: [
+                    // InfoRowData(
+                    //   icon: Icons.calendar_today,
+                    //   label: 'Tanggal',
+                    //   value: it.tgl?.toString() ?? '-',            // pastikan String
+                    //   color: Colors.blue.shade700,
+                    // ),
+                  ],
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => NyangkutDetailScreen(
+                          noNyangkut: it.NoNyangkut.toString(),
+                          tgl: it.tgl?.toString() ?? '-',
                         ),
                       ),
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            nyangkut.NoNyangkut,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF4B322A),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Tanggal: ${nyangkut.tgl}',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                    );
+                  },
                 );
-
-
               },
-              separatorBuilder: (context, index) => const SizedBox(height: 10),
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _EmptyOrError extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+  const _EmptyOrError({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    const brandColor = Color(0xFF755330);
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(message, style: const TextStyle(color: Colors.grey, fontSize: 16)),
+          const SizedBox(height: 10),
+          ElevatedButton(
+            onPressed: onRetry,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: brandColor,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('Retry'),
+          ),
+        ],
       ),
     );
   }
