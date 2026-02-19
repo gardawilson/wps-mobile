@@ -4,7 +4,7 @@ class ApiConstants {
   static String get baseUrl => dotenv.env['API_BASE_URL'] ?? '';
 
   static String get changePassword => '$baseUrl/api/change-password';
-  static String get login => '$baseUrl/api/auth/login';
+  static String get login => '$baseUrl/api/auth/login2';
   static String get checkLabel => '$baseUrl/api/label-list/check';
   static String get saveChanges => '$baseUrl/api/label-list/save-changes';
   static String get listNoSO => '$baseUrl/api/no-stock-opname';
@@ -15,13 +15,14 @@ class ApiConstants {
   static String get checkKdBongkar => '$baseUrl/api/kd-bongkar/check';
   static String get updateKdBongkar => '$baseUrl/api/kd-bongkar/scan';
 
+  static String scanLabel(String noSO) =>
+      '$baseUrl/api/no-stock-opname/$noSO/scan';
 
+  static String scanLabelNyangkut(String noNyangkut) =>
+      '$baseUrl/api/label-nyangkut/$noNyangkut';
 
-  static String scanLabel(String noSO) => '$baseUrl/api/no-stock-opname/$noSO/scan';
-
-  static String scanLabelNyangkut(String noNyangkut) => '$baseUrl/api/label-nyangkut/$noNyangkut';
-
-  static String scanLabelLancar(String noLabel) => '$baseUrl/api/label-nyangkut/lancar/$noLabel';
+  static String scanLabelLancar(String noLabel) =>
+      '$baseUrl/api/label-nyangkut/lancar/$noLabel';
 
   static String labelData(String noLabel) => '$baseUrl/api/label-data/$noLabel';
 

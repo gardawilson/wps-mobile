@@ -6,15 +6,15 @@ import '../../../core/widgets/loading_skeleton.dart';
 import '../widget/add_manual_dialog.dart';
 import 'barcode_qr_scan_stock_opname_screen.dart';
 import 'package:searchfield/searchfield.dart';
-import 'package:flutter_searchable_dropdown/flutter_searchable_dropdown.dart';  // Import package
-
-
+import 'package:flutter_searchable_dropdown/flutter_searchable_dropdown.dart'; // Import package
 
 class StockOpnameInputScreen extends StatefulWidget {
   final String noSO;
   final String tgl;
 
-  const StockOpnameInputScreen({Key? key, required this.noSO, required this.tgl}) : super(key: key);
+  const StockOpnameInputScreen(
+      {Key? key, required this.noSO, required this.tgl})
+      : super(key: key);
 
   @override
   _StockOpnameInputScreenState createState() => _StockOpnameInputScreenState();
@@ -30,7 +30,8 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
   @override
   void initState() {
     super.initState();
-    final viewModel = Provider.of<StockOpnameInputViewModel>(context, listen: false);
+    final viewModel =
+        Provider.of<StockOpnameInputViewModel>(context, listen: false);
 
     // Memanggil fetchData() untuk memuat data lokasi
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -41,7 +42,8 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
 
     // Menambahkan listener untuk infinite scroll
     _scrollController.addListener(() {
-      if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 100) {
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 100) {
         if (!isLoadingMore) {
           isLoadingMore = true;
           viewModel.loadMoreData(widget.noSO).then((_) {
@@ -85,16 +87,17 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
               children: [
                 _buildFilterDropdown(),
                 SizedBox(width: 16),
-                _buildLocationDropdown(),  // Menggunakan SearchableDropdown
+                _buildLocationDropdown(), // Menggunakan SearchableDropdown
                 SizedBox(width: 16),
-                _buildCountText(),  // Menampilkan count di sebelah kanan
+                _buildCountText(), // Menampilkan count di sebelah kanan
               ],
             ),
           ),
           Expanded(
             child: Consumer<StockOpnameInputViewModel>(
               builder: (context, viewModel, child) {
-                if (viewModel.isInitialLoading && viewModel.noLabelList.isEmpty) {
+                if (viewModel.isInitialLoading &&
+                    viewModel.noLabelList.isEmpty) {
                   return const LoadingSkeleton();
                 }
 
@@ -118,7 +121,8 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
 
                 return ListView.builder(
                   controller: _scrollController,
-                  itemCount: viewModel.noLabelList.length + (viewModel.isLoading ? 1 : 0),
+                  itemCount: viewModel.noLabelList.length +
+                      (viewModel.isLoading ? 1 : 0),
                   itemBuilder: (context, index) {
                     if (index == viewModel.noLabelList.length) {
                       return const Center(
@@ -132,7 +136,8 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
                     final noLabel = viewModel.noLabelList[index];
 
                     return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 16.0),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 0.0, horizontal: 16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -145,11 +150,13 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
                           ),
                           Text(
                             noLabel.labelType ?? 'Tidak Ada Tipe',
-                            style: const TextStyle(fontSize: 14, color: Colors.grey),
+                            style: const TextStyle(
+                                fontSize: 14, color: Colors.grey),
                           ),
                           Text(
                             'Lokasi: ${noLabel.labelLocation ?? "-"}',
-                            style: const TextStyle(fontSize: 14, color: Colors.blueAccent),
+                            style: const TextStyle(
+                                fontSize: 14, color: Colors.blueAccent),
                           ),
                           const Divider(),
                         ],
@@ -202,14 +209,16 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
       child: DropdownButton<String>(
         value: _selectedFilter,
         hint: const Text('Filter Label'),
-        isExpanded: true,  // Agar dropdown mengisi ruang lebar yang tersedia
+        isExpanded: true, // Agar dropdown mengisi ruang lebar yang tersedia
         onChanged: (value) {
           setState(() {
             _selectedFilter = value;
           });
 
-          final viewModel = Provider.of<StockOpnameInputViewModel>(context, listen: false);
-          viewModel.fetchData(widget.noSO, filterBy: _selectedFilter, idLokasi: _selectedLocation);
+          final viewModel =
+              Provider.of<StockOpnameInputViewModel>(context, listen: false);
+          viewModel.fetchData(widget.noSO,
+              filterBy: _selectedFilter, idLokasi: _selectedLocation);
         },
         items: [
           DropdownMenuItem<String>(value: null, child: Text('Semua')),
@@ -228,7 +237,6 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
     );
   }
 
-
   Widget _buildLocationDropdown() {
     return Container(
       width: 120, // Tentukan lebar tetap untuk dropdown
@@ -239,7 +247,8 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
         border: Border.all(color: Colors.grey.shade300),
       ),
       child: SearchField(
-        controller: _locationController,  // Menghubungkan controller dengan SearchField
+        controller:
+            _locationController, // Menghubungkan controller dengan SearchField
         hint: 'Lokasi',
         searchInputDecoration: SearchInputDecoration(
           border: InputBorder.none,
@@ -255,15 +264,20 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
         ],
         onSuggestionTap: (selectedLocation) {
           setState(() {
-            _selectedLocation = selectedLocation.searchKey;  // Menyimpan ID Lokasi
-            _locationController.text = selectedLocation.searchKey;  // Menampilkan nama lokasi di input
+            _selectedLocation =
+                selectedLocation.searchKey; // Menyimpan ID Lokasi
+            _locationController.text =
+                selectedLocation.searchKey; // Menampilkan nama lokasi di input
           });
 
-          final viewModel = Provider.of<StockOpnameInputViewModel>(context, listen: false);
+          final viewModel =
+              Provider.of<StockOpnameInputViewModel>(context, listen: false);
           if (_selectedLocation == 'Semua') {
-            viewModel.fetchData(widget.noSO, filterBy: _selectedFilter, idLokasi: null);
+            viewModel.fetchData(widget.noSO,
+                filterBy: _selectedFilter, idLokasi: null);
           } else {
-            viewModel.fetchData(widget.noSO, filterBy: _selectedFilter, idLokasi: _selectedLocation);
+            viewModel.fetchData(widget.noSO,
+                filterBy: _selectedFilter, idLokasi: _selectedLocation);
           }
         },
       ),
@@ -283,7 +297,6 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
       ),
     );
   }
-
 
   void _showScanBarQRCode(BuildContext context) {
     if (_selectedLocation == null || _selectedLocation == 'Semua') {
@@ -306,22 +319,25 @@ class _StockOpnameInputScreenState extends State<StockOpnameInputScreen> {
   }
 
   void _showAddManualDialog(BuildContext context) {
-    if (_selectedLocation == null || _selectedLocation == 'Semua') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Harap pilih lokasi terlebih dahulu.')),
-      );
-      return;
-    }
+    // if (_selectedLocation == null || _selectedLocation == 'Semua') {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(content: Text('Harap pilih lokasi terlebih dahulu.')),
+    //   );
+    //   return;
+    // }
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AddManualDialog(
-          noSO: widget.noSO,
-          selectedFilter: _selectedFilter ?? 'all',
-          idLokasi: _selectedLocation!,
-        );
-      },
+    // showDialog(
+    //   context: context,
+    //   builder: (BuildContext context) {
+    //     return AddManualDialog(
+    //       noSO: widget.noSO,
+    //       selectedFilter: _selectedFilter ?? 'all',
+    //       idLokasi: _selectedLocation!,
+    //     );
+    //   },
+    // );
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Fitur ini telah di nonaktifkan')),
     );
   }
 }

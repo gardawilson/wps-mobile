@@ -1,11 +1,10 @@
-// lib/features/qc_sawmill/widgets/qc_detail_form_sheet.dart
 import 'package:flutter/material.dart';
 import '../model/qc_sawmill_detail.dart';
 
 Future<QcSawmillDetail?> showQcDetailFormSheet(
     BuildContext context, {
       QcSawmillDetail? initial,
-      int? suggestedNoUrut, // ⬅️ tambah: nomor urut usulan dari parent
+      int? suggestedNoUrut,
     }) {
   return showModalBottomSheet<QcSawmillDetail>(
     context: context,
@@ -15,14 +14,15 @@ Future<QcSawmillDetail?> showQcDetailFormSheet(
     backgroundColor: Colors.transparent,
     builder: (_) => _QcDetailFormSheet(
       initial: initial,
-      suggestedNoUrut: suggestedNoUrut, // ⬅️ kirim ke widget
+      suggestedNoUrut: suggestedNoUrut,
     ),
   );
 }
 
 class _QcDetailFormSheet extends StatefulWidget {
   final QcSawmillDetail? initial;
-  final int? suggestedNoUrut; // ⬅️ baru
+  final int? suggestedNoUrut;
+
   const _QcDetailFormSheet({
     required this.initial,
     this.suggestedNoUrut,
@@ -35,7 +35,6 @@ class _QcDetailFormSheet extends StatefulWidget {
 class _QcDetailFormSheetState extends State<_QcDetailFormSheet> {
   final _formKey = GlobalKey<FormState>();
 
-  // noUrut sekarang read-only (bukan TextField)
   int? _noUrutVal;
 
   late final TextEditingController _cutTebal;
@@ -49,8 +48,6 @@ class _QcDetailFormSheetState extends State<_QcDetailFormSheet> {
   void initState() {
     super.initState();
     final i = widget.initial;
-
-    // ⬇️ pakai initial.noUrut kalau ada; kalau null, pakai suggestedNoUrut dari parent
     _noUrutVal = i?.noUrut ?? widget.suggestedNoUrut;
 
     _cutTebal = TextEditingController(text: _numOrEmpty(i?.cuttingTebal));
@@ -59,6 +56,12 @@ class _QcDetailFormSheetState extends State<_QcDetailFormSheet> {
     _actLebar = TextEditingController(text: _numOrEmpty(i?.actualLebar));
     _susTebal = TextEditingController(text: _numOrEmpty(i?.susutTebal));
     _susLebar = TextEditingController(text: _numOrEmpty(i?.susutLebar));
+
+    // Tambahkan listener agar susut otomatis dihitung
+    _cutTebal.addListener(_recalcSusut);
+    _cutLebar.addListener(_recalcSusut);
+    _actTebal.addListener(_recalcSusut);
+    _actLebar.addListener(_recalcSusut);
   }
 
   @override
@@ -72,9 +75,29 @@ class _QcDetailFormSheetState extends State<_QcDetailFormSheet> {
     super.dispose();
   }
 
+  // Helper konversi dan format angka
   String _numOrEmpty(double? n) =>
       n == null ? '' : (n % 1 == 0 ? n.toStringAsFixed(0) : n.toString());
   double? _toD(String s) => double.tryParse(s.trim());
+
+  // Hitung ulang susut
+  void _recalcSusut() {
+    final cutT = _toD(_cutTebal.text) ?? 0;
+    final actT = _toD(_actTebal.text) ?? 0;
+    final cutL = _toD(_cutLebar.text) ?? 0;
+    final actL = _toD(_actLebar.text) ?? 0;
+
+    final susT = cutT - actT;
+    final susL = cutL - actL;
+
+    // Update text field secara otomatis
+    setState(() {
+      _susTebal.text =
+      susT == 0 ? '' : susT.toStringAsFixed(susT % 1 == 0 ? 0 : 2);
+      _susLebar.text =
+      susL == 0 ? '' : susL.toStringAsFixed(susL % 1 == 0 ? 0 : 2);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -108,7 +131,6 @@ class _QcDetailFormSheetState extends State<_QcDetailFormSheet> {
             shrinkWrap: true,
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             children: [
-              // Header: judul + chip no urut (#N)
               _SheetHeader(noQc: noQc, noUrut: _noUrutVal),
 
               const SizedBox(height: 16),
@@ -121,8 +143,7 @@ class _QcDetailFormSheetState extends State<_QcDetailFormSheet> {
                       controller: _cutTebal,
                       keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
-                      decoration:
-                      _inputDeco(label: 'Tebal (T)', hint: 'mis. 25'),
+                      decoration: _inputDeco(label: 'Tebal (T)', hint: 'mis. 25'),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -131,8 +152,7 @@ class _QcDetailFormSheetState extends State<_QcDetailFormSheet> {
                       controller: _cutLebar,
                       keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
-                      decoration:
-                      _inputDeco(label: 'Lebar (L)', hint: 'mis. 120'),
+                      decoration: _inputDeco(label: 'Lebar (L)', hint: 'mis. 120'),
                     ),
                   ),
                 ],
@@ -166,27 +186,25 @@ class _QcDetailFormSheetState extends State<_QcDetailFormSheet> {
               ),
 
               const SizedBox(height: 16),
-              const _SectionTitle(title: 'Susut'),
+              const _SectionTitle(title: 'Susut (Auto Generate)'),
               const SizedBox(height: 8),
               Row(
                 children: [
                   Expanded(
                     child: TextFormField(
                       controller: _susTebal,
-                      keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
+                      enabled: false, // tidak bisa diedit manual
                       decoration:
-                      _inputDeco(label: 'Tebal (T)', hint: 'cth: 0.4'),
+                      _inputDeco(label: 'Tebal (T)', hint: 'otomatis'),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: TextFormField(
                       controller: _susLebar,
-                      keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
+                      enabled: false, // tidak bisa diedit manual
                       decoration:
-                      _inputDeco(label: 'Lebar (L)', hint: 'cth: 0.6'),
+                      _inputDeco(label: 'Lebar (L)', hint: 'otomatis'),
                     ),
                   ),
                 ],
@@ -196,7 +214,6 @@ class _QcDetailFormSheetState extends State<_QcDetailFormSheet> {
               _ActionButtons(
                 onCancel: () => Navigator.pop(context, null),
                 onSave: () {
-                  // validasi minimal: noUrut harus ada
                   if (_noUrutVal == null || _noUrutVal! <= 0) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -209,7 +226,6 @@ class _QcDetailFormSheetState extends State<_QcDetailFormSheet> {
                   final out = QcSawmillDetail(
                     noQc: noQc,
                     noUrut: _noUrutVal,
-                    // noST DIHAPUS (tidak digunakan)
                     cuttingTebal: _toD(_cutTebal.text),
                     cuttingLebar: _toD(_cutLebar.text),
                     actualTebal: _toD(_actTebal.text),
@@ -276,8 +292,7 @@ class _SheetHeader extends StatelessWidget {
           decoration: BoxDecoration(
             color: const Color(0xFF755330).withOpacity(.12),
             borderRadius: BorderRadius.circular(999),
-            border:
-            Border.all(color: const Color(0xFF755330).withOpacity(.25)),
+            border: Border.all(color: const Color(0xFF755330).withOpacity(.25)),
           ),
           child: Text(
             '#${noUrut ?? '-'}',
