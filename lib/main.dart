@@ -10,9 +10,9 @@ import 'package:wps_mobile/features/kayu_bulat/view_model/kayu_bulat_attachment_
 import 'package:wps_mobile/features/kayu_bulat/view_model/kayu_bulat_view_model.dart';
 import 'package:wps_mobile/features/qc_sawmill/view/qc_sawmill_header_screen.dart';
 import 'package:wps_mobile/features/qc_sawmill/view_model/qc_sawmill_header_view_model.dart';
+import 'package:wps_mobile/login/view/login_screen.dart';
 import 'core/auth/token_provider.dart';
 import 'core/network/api_client.dart';
-import 'features/login/view/login_screen.dart';
 import 'features/mesin_sawmill/repository/mesin_sawmill_repository.dart';
 import 'features/mesin_sawmill/view_model/mesin_sawmill_view_model.dart';
 import 'features/stock_opname/view/stock_opname_list_screen.dart';
@@ -66,14 +66,16 @@ class MyApp extends StatelessWidget {
           update: (_, api, __) => JenisKayuRepository(api),
         ),
         ChangeNotifierProvider(
-          create: (ctx) => JenisKayuViewModel(repo: ctx.read<JenisKayuRepository>()),
+          create: (ctx) =>
+              JenisKayuViewModel(repo: ctx.read<JenisKayuRepository>()),
         ),
         // Mesin Sawmill
         ProxyProvider<ApiClient, MesinSawmillRepository>(
           update: (_, api, __) => MesinSawmillRepository(api),
         ),
         ChangeNotifierProvider(
-          create: (ctx) => MesinSawmillViewModel(repo: ctx.read<MesinSawmillRepository>()),
+          create: (ctx) =>
+              MesinSawmillViewModel(repo: ctx.read<MesinSawmillRepository>()),
         ),
       ],
       child: MaterialApp(

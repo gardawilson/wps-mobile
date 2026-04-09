@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import '../model/qc_sawmill_detail.dart';
 
 Future<QcSawmillDetail?> showQcDetailFormSheet(
-    BuildContext context, {
-      QcSawmillDetail? initial,
-      int? suggestedNoUrut,
-    }) {
+  BuildContext context, {
+  QcSawmillDetail? initial,
+  int? suggestedNoUrut,
+}) {
   return showModalBottomSheet<QcSawmillDetail>(
     context: context,
     isScrollControlled: true,
@@ -93,9 +93,9 @@ class _QcDetailFormSheetState extends State<_QcDetailFormSheet> {
     // Update text field secara otomatis
     setState(() {
       _susTebal.text =
-      susT == 0 ? '' : susT.toStringAsFixed(susT % 1 == 0 ? 0 : 2);
+          susT == 0 ? '' : susT.toStringAsFixed(susT % 1 == 0 ? 0 : 2);
       _susLebar.text =
-      susL == 0 ? '' : susL.toStringAsFixed(susL % 1 == 0 ? 0 : 2);
+          susL == 0 ? '' : susL.toStringAsFixed(susL % 1 == 0 ? 0 : 2);
     });
   }
 
@@ -132,7 +132,6 @@ class _QcDetailFormSheetState extends State<_QcDetailFormSheet> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             children: [
               _SheetHeader(noQc: noQc, noUrut: _noUrutVal),
-
               const SizedBox(height: 16),
               const _SectionTitle(title: 'Cutting'),
               const SizedBox(height: 8),
@@ -142,8 +141,9 @@ class _QcDetailFormSheetState extends State<_QcDetailFormSheet> {
                     child: TextFormField(
                       controller: _cutTebal,
                       keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                      decoration: _inputDeco(label: 'Tebal (T)', hint: 'mis. 25'),
+                          const TextInputType.numberWithOptions(decimal: true),
+                      decoration:
+                          _inputDeco(label: 'Tebal (T)', hint: 'mis. 25'),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -151,13 +151,13 @@ class _QcDetailFormSheetState extends State<_QcDetailFormSheet> {
                     child: TextFormField(
                       controller: _cutLebar,
                       keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                      decoration: _inputDeco(label: 'Lebar (L)', hint: 'mis. 120'),
+                          const TextInputType.numberWithOptions(decimal: true),
+                      decoration:
+                          _inputDeco(label: 'Lebar (L)', hint: 'mis. 120'),
                     ),
                   ),
                 ],
               ),
-
               const SizedBox(height: 16),
               const _SectionTitle(title: 'Actual'),
               const SizedBox(height: 8),
@@ -167,9 +167,9 @@ class _QcDetailFormSheetState extends State<_QcDetailFormSheet> {
                     child: TextFormField(
                       controller: _actTebal,
                       keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
+                          const TextInputType.numberWithOptions(decimal: true),
                       decoration:
-                      _inputDeco(label: 'Tebal (T)', hint: 'mis. 24.6'),
+                          _inputDeco(label: 'Tebal (T)', hint: 'mis. 24.6'),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -177,14 +177,13 @@ class _QcDetailFormSheetState extends State<_QcDetailFormSheet> {
                     child: TextFormField(
                       controller: _actLebar,
                       keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
+                          const TextInputType.numberWithOptions(decimal: true),
                       decoration:
-                      _inputDeco(label: 'Lebar (L)', hint: 'mis. 119.4'),
+                          _inputDeco(label: 'Lebar (L)', hint: 'mis. 119.4'),
                     ),
                   ),
                 ],
               ),
-
               const SizedBox(height: 16),
               const _SectionTitle(title: 'Susut (Auto Generate)'),
               const SizedBox(height: 8),
@@ -195,7 +194,7 @@ class _QcDetailFormSheetState extends State<_QcDetailFormSheet> {
                       controller: _susTebal,
                       enabled: false, // tidak bisa diedit manual
                       decoration:
-                      _inputDeco(label: 'Tebal (T)', hint: 'otomatis'),
+                          _inputDeco(label: 'Tebal (T)', hint: 'otomatis'),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -204,12 +203,11 @@ class _QcDetailFormSheetState extends State<_QcDetailFormSheet> {
                       controller: _susLebar,
                       enabled: false, // tidak bisa diedit manual
                       decoration:
-                      _inputDeco(label: 'Lebar (L)', hint: 'otomatis'),
+                          _inputDeco(label: 'Lebar (L)', hint: 'otomatis'),
                     ),
                   ),
                 ],
               ),
-
               const SizedBox(height: 20),
               _ActionButtons(
                 onCancel: () => Navigator.pop(context, null),
@@ -262,8 +260,7 @@ class _QcDetailFormSheetState extends State<_QcDetailFormSheet> {
         borderRadius: BorderRadius.all(Radius.circular(12)),
         borderSide: BorderSide(color: Color(0xFF755330), width: 1.6),
       ),
-      contentPadding:
-      const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
     );
   }
 }
@@ -282,9 +279,9 @@ class _SheetHeader extends StatelessWidget {
           child: Text(
             'Detail - $noQc',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF4B322A),
-            ),
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF4B322A),
+                ),
           ),
         ),
         Container(
