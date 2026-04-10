@@ -1,54 +1,24 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../../constants/api_constants.dart';
+// lib/features/login/view_model/login_view_model.dart
+import '../data/login_repository.dart';
+import '../model/login_result.dart';
 import '../model/user_model.dart';
-import '../../../core/services/permission_storage.dart'; // tambahkan ini
 
 class LoginViewModel {
-  Future<bool> validateLogin(User user) async {
-    try {
-      final response = await http.post(
-        Uri.parse(ApiConstants.login),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(user.toJson()),
+  LoginViewModel({LoginRepository? repo}) : _repo = repo ?? LoginRepository();
+  final LoginRepository _repo;
+
+  Future<LoginResult> validateLogin(User user) async {
+    // ViewModel hanya validasi ringan + delegasi ke repository
+    if (user.username.trim().isEmpty || user.password.isEmpty) {
+      return LoginResult(
+        success: false,
+        message: 'Username dan password harus diisi',
+        errorType: 'validation',
+        detailCode: 'validation',
       );
-
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
-
-        if (data['success'] == true) {
-          print('Login success: ${data['message']}');
-
-          String token = data['token'];
-          var userData = data['user'];
-          List<String> permissions = [];
-
-          if (userData['permissions'] != null) {
-            permissions = List<String>.from(userData['permissions']);
-          }
-
-          // Simpan token dan permissions
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('token', token);
-          await PermissionStorage.savePermissions(permissions);
-
-          print('✅ Token dan permissions disimpan');
-          return true;
-        } else {
-          print('Login gagal: ${data['message']}');
-          return false;
-        }
-      } else {
-        print('Login failed: ${response.body}');
-        return false;
-      }
-    } catch (e) {
-      print('Error during login: $e');
-      return false;
     }
+
+    // repository sudah return LoginResult (tidak throw)
+    return _repo.login(user);
   }
 }
