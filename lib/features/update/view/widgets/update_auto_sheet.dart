@@ -18,9 +18,9 @@ class UpdateDialog extends StatefulWidget {
 
   /// Tampilkan dialog untuk check & auto update dalam satu flow
   static Future<bool?> show(
-      BuildContext context, {
-        required UpdateViewModel vm,
-      }) {
+    BuildContext context, {
+    required UpdateViewModel vm,
+  }) {
     return showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -143,7 +143,7 @@ class _UpdateDialogState extends State<UpdateDialog>
 
       final file = await widget.vm.downloadUpdate(
         info,
-            (p) {
+        (p) {
           if (!mounted) return;
           setState(() => _progress = p.clamp(0, 100));
         },
@@ -200,9 +200,8 @@ class _UpdateDialogState extends State<UpdateDialog>
           child: Container(
             constraints: BoxConstraints(
               maxWidth: 600,
-              maxHeight: isLandscape
-                  ? mq.size.height * 0.85
-                  : mq.size.height * 0.7,
+              maxHeight:
+                  isLandscape ? mq.size.height * 0.85 : mq.size.height * 0.7,
             ),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -495,10 +494,8 @@ class _UpdateDialogState extends State<UpdateDialog>
     final changelog = info.changelog.trim();
     if (changelog.isEmpty) return const SizedBox.shrink();
 
-    final items = changelog
-        .split('\n')
-        .where((line) => line.trim().isNotEmpty)
-        .toList();
+    final items =
+        changelog.split('\n').where((line) => line.trim().isNotEmpty).toList();
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
@@ -629,16 +626,16 @@ class _UpdateDialogState extends State<UpdateDialog>
                           colors: _progress >= 100
                               ? [Colors.green.shade400, Colors.green.shade600]
                               : [
-                            const Color(0xFF0D47A1),
-                            const Color(0xFF1976D2)
-                          ],
+                                  const Color(0xFF0D47A1),
+                                  const Color(0xFF1976D2)
+                                ],
                         ),
                         borderRadius: BorderRadius.circular(7),
                         boxShadow: [
                           BoxShadow(
                             color: (_progress >= 100
-                                ? Colors.green.shade400
-                                : const Color(0xFF0D47A1))
+                                    ? Colors.green.shade400
+                                    : const Color(0xFF0D47A1))
                                 .withOpacity(0.4),
                             blurRadius: 10,
                             offset: const Offset(0, 3),
@@ -704,8 +701,8 @@ class _UpdateDialogState extends State<UpdateDialog>
                 Text(
                   _progress >= 100
                       ? (_phase == UpdatePhase.installing
-                      ? 'Siap Install!'
-                      : 'Download Selesai!')
+                          ? 'Siap Install!'
+                          : 'Download Selesai!')
                       : 'Mengunduh Update',
                   style: TextStyle(
                     fontSize: 14,
@@ -806,7 +803,8 @@ class _UpdateDialogState extends State<UpdateDialog>
         if (_progress >= 100 && _phase == UpdatePhase.installing) ...[
           const SizedBox(height: 12),
           TweenAnimationBuilder<double>(
-            key: const ValueKey('installing-message'), // ✅ Tambah key untuk stability
+            key: const ValueKey(
+                'installing-message'), // ✅ Tambah key untuk stability
             tween: Tween(begin: 0.0, end: 1.0),
             duration: const Duration(milliseconds: 500),
             curve: Curves.easeOutBack,
@@ -817,8 +815,8 @@ class _UpdateDialogState extends State<UpdateDialog>
                 child: Opacity(
                   opacity: animValue.clamp(0.0, 1.0), // ✅ Clamp untuk safety
                   child: Container(
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
                       color: Colors.green.shade50,
                       borderRadius: BorderRadius.circular(12),
